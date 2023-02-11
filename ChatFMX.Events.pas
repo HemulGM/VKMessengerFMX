@@ -3,7 +3,8 @@
 interface
 
 uses
-  System.Classes, VK.Types, System.Messaging, VK.UserEvents;
+  System.Classes, VK.Types, System.Messaging, System.SysUtils,
+  System.Generics.Collections, VK.UserEvents;
 
 type
   TEventUserStatus = class(TMessage)
@@ -54,16 +55,23 @@ type
     constructor Create(APeerId: TVkPeerId; ANewId: Int64; AIsMajor: Boolean); reintroduce;
   end;
 
+  TQueueSubscribers = class(TThreadList<TObject>);
+
   Event = class
   private
     class var
       FManager: TMessageManager;
+      FQueueSubscribers: TQueueSubscribers;
   public
     class constructor Create;
     class destructor Destroy;
     class procedure Send(Message: TMessage);
     class function Subscribe(const AMessageClass: TClass; const AListenerMethod: TMessageListenerMethod): Integer; overload;
     class procedure Unsubscribe(const AMessageClass: TClass; const AListenerMethod: TMessageListenerMethod; Immediate: Boolean = False); overload;
+    class procedure QueueSubscribe(AObject: TObject);
+    class procedure QueueUnsubscribe(AObject: TObject);
+    class procedure Queue(Owner: TObject; Proc: TProc);
+    class procedure Sync(Owner: TObject; Proc: TProc);
   end;
 
 implementation
@@ -73,11 +81,38 @@ implementation
 class constructor Event.Create;
 begin
   FManager := TMessageManager.Create;
+  FQueueSubscribers := TQueueSubscribers.Create;
 end;
 
 class destructor Event.Destroy;
 begin
   FManager.Free;
+  FQueueSubscribers.Free;
+end;
+
+class procedure Event.Queue(Owner: TObject; Proc: TProc);
+begin
+  TThread.ForceQueue(nil,
+    procedure
+    begin
+      var List := FQueueSubscribers.LockList;
+      try
+        if List.Contains(Owner) then
+          Proc;
+      finally
+        FQueueSubscribers.UnlockList;
+      end;
+    end);
+end;
+
+class procedure Event.QueueSubscribe(AObject: TObject);
+begin
+  FQueueSubscribers.Add(AObject);
+end;
+
+class procedure Event.QueueUnsubscribe(AObject: TObject);
+begin
+  FQueueSubscribers.Remove(AObject);
 end;
 
 class procedure Event.Send(Message: TMessage);
@@ -99,6 +134,21 @@ begin
       Res := FManager.SubscribeToMessage(AMessageClass, AListenerMethod);
     end);
   Result := Res;
+end;
+
+class procedure Event.Sync(Owner: TObject; Proc: TProc);
+begin
+  TThread.Synchronize(nil,
+    procedure
+    begin
+      var List := FQueueSubscribers.LockList;
+      try
+        if List.Contains(Owner) then
+          Proc;
+      finally
+        FQueueSubscribers.UnlockList;
+      end;
+    end);
 end;
 
 class procedure Event.Unsubscribe(const AMessageClass: TClass; const AListenerMethod: TMessageListenerMethod; Immediate: Boolean);

@@ -214,12 +214,12 @@ type
     procedure SetIsNeedAddToFriends(const Value: Boolean);
     procedure SetIsCanWrtie(const Value: Boolean);
     procedure SetOnBack(const Value: TNotifyEvent);
-    procedure AppendHistory(Items: TVkMessageHistory);
+    procedure AppendHistory(Items: TVkMessageHistory; const Data: IExtended);
     procedure CalcDisappear;
     procedure ShowHints;
     procedure HideHints;
     procedure ErrorLoading;
-    procedure AppendMessage(Items: TVkMessageHistory);
+    procedure AppendMessage(Items: TVkMessageHistory; Data: IExtended);
     function GetChatInfo: TChatInfo;
     procedure SetIsUser(const Value: Boolean);
     procedure SetOutRead(const Value: Int64);
@@ -346,11 +346,10 @@ begin
       begin
         var Extended: IExtended := Items;
         if Length(Items.Items) > 0 then
-          TThread.Queue(nil,
+          Event.Queue(Self,
             procedure
             begin
               CreatePinnedMessage(Items.Items[0], Extended);
-              Items := nil;
             end);
       end;
     end);
@@ -454,7 +453,7 @@ begin
     procedure
     begin
       NewMessage.Send;
-      TThread.Queue(nil,
+      Event.Queue(Self,
         procedure
         begin
           IsSending := False;
@@ -497,6 +496,7 @@ begin
   LayoutMessageList.Left := 0;
   LayoutMessageList.Opacity := 0;
   UpdateFooterSize;
+  Event.QueueSubscribe(Self);
 end;
 
 procedure TFrameChat.EndOfChat;
@@ -687,12 +687,12 @@ end;
 
 procedure TFrameChat.FOnNewMessage(const Sender: TObject; const M: TMessage);
 var
-  Event: TEventNewMessage absolute M;
+  Msg: TEventNewMessage absolute M;
   MessageId: Int64;
 begin
-  if Event.Data.PeerId <> NormalizePeerId(FConversationId) then
+  if Msg.Data.PeerId <> NormalizePeerId(FConversationId) then
     Exit;
-  MessageId := Event.Data.MessageId;
+  MessageId := Msg.Data.MessageId;
   TTask.Run(
     procedure
     var
@@ -707,27 +707,26 @@ begin
         TVkExtendedField.Sex, TVkExtendedField.FirstNameAcc,
         TVkExtendedField.LastNameAcc]);
       if VK.Messages.GetHistory(Items, Params) then
-        TThread.Queue(nil,
+      begin
+        var Ext: IExtended := Items;
+        Event.Queue(Self,
           procedure
           begin
-            AppendMessage(Items);
+            AppendMessage(Items, Ext);
           end);
+      end;
     end);
 end;
 
-procedure TFrameChat.AppendHistory(Items: TVkMessageHistory);
+procedure TFrameChat.AppendHistory(Items: TVkMessageHistory; const Data: IExtended);
 begin
   var LastId: Int64 := -1;
   LayoutMessageList.BeginUpdate;
   try
-    try
-      for var Item in Items.Items do
-      begin
-        CreateMessageItem(Item, Items, False);
-        LastId := Item.Id;
-      end;
-    finally
-      Items.Free;
+    for var Item in Items.Items do
+    begin
+      CreateMessageItem(Item, Items, False);
+      LastId := Item.Id;
     end;
     if FOffsetEnd then
       InsertDateLastMessage(GetMessageDate(GetFirstMessage), LastId);
@@ -738,25 +737,21 @@ begin
   LayoutMessageList.RecalcSize;
   CalcDisappear;
   if LayoutMessageList.Opacity = 0 then
-    TThread.ForceQueue(nil,
+    Event.Queue(Self,
       procedure
       begin
         TAnimator.AnimateFloat(LayoutMessageList, 'Opacity', 1);
       end);
 end;
 
-procedure TFrameChat.AppendMessage(Items: TVkMessageHistory);
+procedure TFrameChat.AppendMessage(Items: TVkMessageHistory; Data: IExtended);
 begin
   LayoutMessageList.BeginUpdate;
   try
-    try
-      for var Item in Items.Items do
-        CreateMessageItem(Item, Items, True);
-      if Length(Items.Conversations) > 0 then
-        CreateKeyBoard(Items.Conversations[0].CurrentKeyboard);
-    finally
-      Items.Free;
-    end;
+    for var Item in Items.Items do
+      CreateMessageItem(Item, Items, True);
+    if Length(Items.Conversations) > 0 then
+      CreateKeyBoard(Items.Conversations[0].CurrentKeyboard);
   finally
     LayoutMessageList.EndUpdate;
   end;
@@ -764,7 +759,7 @@ begin
   LayoutMessageList.RecalcSize;
   CalcDisappear;
   if LayoutMessageList.Opacity = 0 then
-    TThread.ForceQueue(nil,
+    Event.Queue(Self,
       procedure
       begin
         TAnimator.AnimateFloat(LayoutMessageList, 'Opacity', 1);
@@ -980,6 +975,7 @@ begin
   Event.Unsubscribe(TEventDeleteMessage, FOnDeleteMessage);
   Event.Unsubscribe(TEventMessageChange, FOnChangeMessage);
   Event.Unsubscribe(TEventReadMessages, FOnReadMessage);
+  Event.QueueUnsubscribe(Self);
   FMessages.Free;
   inherited;
 end;
@@ -1002,16 +998,17 @@ begin
     begin
       if Length(Items.Items) < ChatCountQuery then
         FOffsetEnd := True;
-      TThread.Queue(nil,
+      var Extended: IExtended := Items;
+      Event.Queue(Self,
         procedure
         begin
           LayoutReloading.Visible := False;
-          AppendHistory(Items);
+          AppendHistory(Items, Extended);
           FLoading := False;
         end);
     end;
   except
-    TThread.Queue(nil,
+    Event.Queue(Self,
       procedure
       begin
         FLoading := False;
@@ -1314,7 +1311,7 @@ begin
   begin
     var Ext: IExtended := Items;
     if Length(Items.Items) > 0 then
-      TThread.Queue(nil,
+      Event.Queue(Self,
         procedure
         begin
           UpdateInfo(Items.Items[0], Ext);
@@ -1336,7 +1333,7 @@ begin
   if (Key = vkReturn) and (not (ssCtrl in Shift) and not (ssShift in Shift)) then
   begin
     Key := 0;
-    TThread.ForceQueue(nil, SendMessage);
+    Event.Queue(Self, SendMessage);
   end;
 end;
 
@@ -1353,7 +1350,7 @@ begin
       try
         VK.Messages.Unpin(ConversationId);
       except
-        TThread.Queue(nil,
+        Event.Queue(Self,
           procedure
           begin
             ShowMessage('Не удалось открепить сообщение');
@@ -1385,7 +1382,6 @@ begin
     H := H + LayoutFooterTop.Height;
 
   CheckBoxKeyboard.Visible := Assigned(FCurrentKeyboard);
-
   CheckBoxKeyboard.IsChecked := LayoutFooterKeyboard.Visible;
 
   RectangleFooter.Height := H;

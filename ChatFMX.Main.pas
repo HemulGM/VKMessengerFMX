@@ -11,7 +11,7 @@ uses
   VK.Entity.Conversation, System.Messaging, VK.Types,
   System.Generics.Collections, FMX.Memo.Types, FMX.ScrollBox, FMX.Memo,
   ChatFMX.Frame.Loading, VK.UserEvents, VK.Entity.Common.ExtendedList,
-  System.Sensors;
+  System.Sensors, ChatFMX.View.ChatItem;
 
 type
   TChats = class(TObjectList<TFrameChat>)
@@ -138,6 +138,9 @@ type
     procedure ClearChatList;
     procedure Logout;
     procedure FOnChatChangeSort(Sender: TObject);
+    procedure FOnChangeMessage(const Sender: TObject; const M: TMessage);
+    function FindChat(const PeerId: TVkPeerId; var ChatItem: TListBoxItemChat): Boolean;
+    procedure LoadConversationAsync(WithMessageId: Int64);
   public
     property UnreadOnly: Boolean read FUnreadOnly write SetUnreadOnly;
     destructor Destroy; override;
@@ -153,8 +156,8 @@ implementation
 
 uses
   System.Math, System.Threading, VK.Errors, VK.FMX.OAuth2, VK.FMX.Captcha,
-  System.IOUtils, VK.Clients, ChatFMX.View.ChatItem, VK.Messages,
-  ChatFMX.PreviewManager, FMX.Ani, HGM.FMX.SmoothScroll, ChatFMX.Events;
+  System.IOUtils, VK.Clients, VK.Messages, ChatFMX.PreviewManager, FMX.Ani,
+  HGM.FMX.SmoothScroll, ChatFMX.Events;
 
 {$R *.fmx}
 
@@ -267,8 +270,35 @@ begin
   except
     //
   end;
+  Event.Subscribe(TEventNewMessage, FOnChangeMessage);
   TTask.Run(Login);
   //LoadDone;
+end;
+
+function TFormMain.FindChat(const PeerId: TVkPeerId; var ChatItem: TListBoxItemChat): Boolean;
+begin
+  for var i := 0 to Pred(ListBoxChats.Count) do
+    if ListBoxChats.ListItems[i] is TListBoxItemChat then
+    begin
+      ChatItem := (ListBoxChats.ListItems[i] as TListBoxItemChat);
+      if NormalizePeerId(ChatItem.ConversationId) = PeerId then
+        Exit(True);
+    end;
+  ChatItem := nil;
+  Result := False;
+end;
+
+procedure TFormMain.FOnChangeMessage(const Sender: TObject; const M: TMessage);
+var
+  Event: TEventNewMessage absolute M;
+  ChatItem: TListBoxItemChat;
+begin
+  if not FindChat(Event.Data.PeerId, ChatItem) then
+    TTask.Run(
+      procedure
+      begin
+        LoadConversationAsync(Event.Data.MessageId)
+      end);
 end;
 
 procedure TFormMain.FormResize(Sender: TObject);
@@ -278,10 +308,14 @@ end;
 
 procedure TFormMain.FOnChatChangeSort(Sender: TObject);
 begin
+  var Selected := ListBoxChats.Selected;
   ListBoxChats.BeginUpdate;
   try
     ListBoxChats.Sorted := False;
     ListBoxChats.Sorted := True;
+    ListBoxChats.ClearSelection;
+    if Assigned(Selected) then
+      Selected.IsSelected := True;
   finally
     ListBoxChats.EndUpdate;
   end;
@@ -291,6 +325,8 @@ procedure TFormMain.CreateChatItem(Chat: TVkConversationItem; Data: IExtended);
 var
   ListItem: TListBoxItemChat;
 begin
+  if FindChat(Chat.Conversation.Peer.Id, ListItem) then
+    Exit;
   ListItem := TListBoxItemChat.Create(ListBoxChats, VK);
   ListItem.Height := 63;
   ListBoxChats.AddObject(ListItem);
@@ -458,6 +494,41 @@ begin
   ShowChat(Frame);
 end;
 
+procedure TFormMain.LoadConversationAsync(WithMessageId: Int64);
+var
+  Items: TVkConversationItems;
+  Params: TVkParamsConversationsGet;
+begin
+  Params.Extended;
+  Params.Count(1);
+  Params.StartMessageId(WithMessageId);
+  Params.Fields(
+    [TVkExtendedField.Photo50, TVkExtendedField.Verified, TVkExtendedField.OnlineInfo,
+    TVkExtendedField.FirstNameAcc, TVkExtendedField.LastNameAcc]);
+  if FUnreadOnly then
+    Params.Filter(TVkConversationFilter.Unread);
+  try
+    if VK.Messages.GetConversations(Items, Params) then
+    begin
+      var Extended: IExtended := Items;
+      TThread.Synchronize(nil,
+        procedure
+        begin
+          ListBoxChats.BeginUpdate;
+          try
+            for var Item in Items.Items do
+              CreateChatItem(Item, Extended);
+          finally
+            ListBoxChats.EndUpdate;
+            ListBoxChats.Sorted := True;
+          end;
+        end);
+    end;
+  except
+    //
+  end;
+end;
+
 procedure TFormMain.LoadConversationsAsync;
 var
   Items: TVkConversationItems;
@@ -601,6 +672,7 @@ end;
 destructor TFormMain.Destroy;
 begin
   Hide;
+  Event.Unsubscribe(TEventEditMessage, FOnChangeMessage);
   TThread.RemoveQueuedEvents(nil);
   while VK.Handler.Executing do
     Application.ProcessMessages;

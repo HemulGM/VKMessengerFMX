@@ -50,7 +50,6 @@ type
     procedure SetSortMajorId(const Value: Int64);
     procedure SetSortMinorId(const Value: Int64);
     procedure Update(LastMessageId: Int64);
-    procedure FOnUpdateChat(const Sender: TObject; const M: TMessage);
     procedure FOnChangeSort(const Sender: TObject; const M: TMessage);
     procedure SetOnChangeSortId(const Value: TNotifyEvent);
   protected
@@ -154,7 +153,9 @@ begin
   Event.Subscribe(TEventUserStatus, FOnUserStatusChange);
   Event.Subscribe(TEventNewMessage, FOnChangeMessage);
   Event.Subscribe(TEventEditMessage, FOnChangeMessage);
-  Event.Subscribe(TEventDeleteMessage, FOnUpdateChat);
+  Event.Subscribe(TEventDeleteMessage, FOnChangeMessage);
+  Event.Subscribe(TEventMessageChange, FOnChangeMessage);
+  Event.Subscribe(TEventReadMessages, FOnChangeMessage);
   Event.Subscribe(TEventChangeSort, FOnChangeSort);
 end;
 
@@ -163,6 +164,11 @@ begin
   Event.Unsubscribe(TEventUserStatus, FOnUserStatusChange);
   Event.Unsubscribe(TEventNewMessage, FOnChangeMessage);
   Event.Unsubscribe(TEventEditMessage, FOnChangeMessage);
+  Event.Unsubscribe(TEventDeleteMessage, FOnChangeMessage);
+  Event.Unsubscribe(TEventMessageChange, FOnChangeMessage);
+  Event.Unsubscribe(TEventReadMessages, FOnChangeMessage);
+  Event.Unsubscribe(TEventChangeSort, FOnChangeSort);
+
   TPreview.Instance.Unsubscribe(FOnReadyImage);
   inherited;
 end;
@@ -207,15 +213,6 @@ begin
       SortMinorId := Event.NewId;
   end;
   DoChangeSortId;
-end;
-
-procedure TListBoxItemChat.FOnUpdateChat(const Sender: TObject; const M: TMessage);
-var
-  Event: TEventNewMessage absolute M;
-begin
-  if Event.Data.PeerId <> NormalizePeerId(FConversationId) then
-    Exit;
-  UpdateConversation;
 end;
 
 procedure TListBoxItemChat.FOnReadyImage(const Sender: TObject; const M: TMessage);
@@ -430,7 +427,12 @@ begin
           TThread.Synchronize(nil,
             procedure
             begin
+              var Sort := SortMinorId;
+              if Length(Items.Conversations) > 0 then
+                UpdateConversation(Items.Conversations[0], Extended);
               UpdateLastMessage(Items.Items[0], Extended);
+              if Sort <> SortMinorId then
+                DoChangeSortId;
             end);
         end;
       end;
@@ -497,7 +499,7 @@ begin
   end;
 end;
 
-procedure TListBoxItemChat.UpdateLastMessage;
+procedure TListBoxItemChat.UpdateLastMessage(LastMessage: TVkMessage; Data: IExtended);
 begin
   LastTime := LastMessage.Date;
 
@@ -581,6 +583,9 @@ begin
   begin
     SetMessageText('Карта', True)
   end;
+
+  if SortMinorId <> LastMessage.Id then
+    SortMinorId := LastMessage.Id;
 end;
 
 end.
