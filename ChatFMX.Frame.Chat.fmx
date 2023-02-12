@@ -652,7 +652,7 @@ object FrameChat: TFrameChat
         Viewport.Width = 723.000000000000000000
         Viewport.Height = 475.000000000000000000
         object LayoutMessageList: TLayout
-          Position.Y = 8.000000000000000000
+          Position.Y = 40.000000000000000000
           Size.Width = 641.000000000000000000
           Size.Height = 289.000000000000000000
           Size.PlatformDefault = False
@@ -837,6 +837,46 @@ object FrameChat: TFrameChat
             StopValue = xFF3B3B3B
             Trigger = 'IsMouseOver=true'
             TriggerInverse = 'IsMouseOver=false'
+          end
+        end
+      end
+      object LayoutActualDate: TLayout
+        Align = MostTop
+        Padding.Right = 12.000000000000000000
+        Size.Width = 723.000000000000000000
+        Size.Height = 38.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 40
+        object RoundRectActualDate: TRoundRect
+          Align = Center
+          Fill.Color = xFF262626
+          Size.Width = 90.000000000000000000
+          Size.Height = 26.000000000000000000
+          Size.PlatformDefault = False
+          Stroke.Color = x50FFFFFF
+          object LabelActualDate: TLabel
+            Align = Center
+            AutoSize = True
+            StyledSettings = [Style]
+            Size.Width = 48.000000000000000000
+            Size.Height = 16.000000000000000000
+            Size.PlatformDefault = False
+            TextSettings.Font.Family = 'Roboto'
+            TextSettings.Font.Size = 12.500000000000000000
+            TextSettings.FontColor = x78FFFFFF
+            TextSettings.HorzAlign = Center
+            TextSettings.WordWrap = False
+            TextSettings.Trimming = None
+            Text = #1089#1077#1075#1086#1076#1085#1103
+            TabOrder = 0
+            OnResize = LabelActualDateResize
+          end
+          object ShadowEffect1: TShadowEffect
+            Distance = 0.001000000047497451
+            Direction = 45.000000000000000000
+            Softness = 0.100000001490116100
+            Opacity = 0.300000011920929000
+            ShadowColor = claBlack
           end
         end
       end

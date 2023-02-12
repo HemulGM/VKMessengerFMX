@@ -6,7 +6,7 @@ uses
   System.StartUpCopy,
   FMX.Forms,
   {$IF CompilerVersion > 34.0}
-  FMX.ListBox in 'FMX.ListBox.pas' ,
+  FMX.ListBox in 'FMX.ListBox.pas',
   {$ENDIF }
   ChatFMX.Main in 'ChatFMX.Main.pas' {FormMain},
   ChatFMX.Frame.Chat in 'ChatFMX.Frame.Chat.pas' {FrameChat: TFrame},

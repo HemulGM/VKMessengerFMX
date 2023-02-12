@@ -15,7 +15,6 @@ object FrameMessageDate: TFrameMessageDate
     TextSettings.Font.Size = 12.500000000000000000
     TextSettings.FontColor = xFF939393
     TextSettings.HorzAlign = Center
-    TextSettings.VertAlign = Leading
     TextSettings.WordWrap = False
     Text = '2 '#1080#1102#1085#1100' 2022'
     TabOrder = 0

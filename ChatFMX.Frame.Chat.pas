@@ -11,7 +11,7 @@ uses
   FMX.Memo.Types, FMX.ScrollBox, FMX.Memo, ChatFMX.Frame.Loading,
   VK.Entity.Common.ExtendedList, ChatFMX.Frame.Message, ChatFMX.Classes,
   ChatFMX.Frame.Attachment.PinnedMessage, System.Generics.Collections,
-  VK.Entity.Keyboard, ChatFMX.Frame.Keyboard;
+  VK.Entity.Keyboard, ChatFMX.Frame.Keyboard, FMX.Effects;
 
 type
   TFrameChat = class;
@@ -126,6 +126,10 @@ type
     Button3: TButton;
     Button4: TButton;
     CheckBoxKeyboard: TCheckBox;
+    LayoutActualDate: TLayout;
+    RoundRectActualDate: TRoundRect;
+    LabelActualDate: TLabel;
+    ShadowEffect1: TShadowEffect;
     procedure VertScrollBoxMessagesResize(Sender: TObject);
     procedure LayoutMessageListResize(Sender: TObject);
     procedure LayoutUnselClick(Sender: TObject);
@@ -143,6 +147,7 @@ type
     procedure ButtonSelDeleteClick(Sender: TObject);
     procedure ButtonSelAsSPAMClick(Sender: TObject);
     procedure CheckBoxKeyboardChange(Sender: TObject);
+    procedure LabelActualDateResize(Sender: TObject);
   private
     FConversationId: TVkPeerId;
     FVK: TCustomVK;
@@ -209,7 +214,7 @@ type
     procedure SetHeadMode(const Value: THeadMode);
     procedure UpdateFooterSize;
     function GetMessageDate(Frame: TFrame): TDateTime;
-    procedure InsertDateLastMessage(LastDate: TDateTime; MessageId: Int64);
+    procedure InsertDateLastMessage(LastDate: TDateTime; MessageId: Extended);
     procedure SetVerified(const Value: Boolean);
     procedure SetIsNeedAddToFriends(const Value: Boolean);
     procedure SetIsCanWrtie(const Value: Boolean);
@@ -244,6 +249,7 @@ type
     procedure ShowSearch(const Value: Boolean);
     procedure FOnReplyMessageClick(Sender: TObject);
     procedure ScrollTo(Frame: TFrameMessage);
+    procedure UpdateActualDate;
     property HeadMode: THeadMode read FHeadMode write SetHeadMode;
   protected
     procedure SetVisible(const Value: Boolean); override;
@@ -466,6 +472,7 @@ begin
   FMessages := TMessages.Create;
   inherited Create(AOwner);
   FCurrentKeyboard := nil;
+  LayoutActualDate.Visible := False;
   RectangleDesign.Visible := False;
   FPinnedMessage := nil;
   FPinnedMessageId := -1;
@@ -510,6 +517,11 @@ begin
     TTask.Run(LoadConversationAsync);
   end;
   FrameLoadingMesages.Visible := not FOffsetEnd;
+end;
+
+procedure TFrameChat.LabelActualDateResize(Sender: TObject);
+begin
+  RoundRectActualDate.Width := LabelActualDate.Width + 30;
 end;
 
 procedure TFrameChat.LayoutFooterBottomResize(Sender: TObject);
@@ -729,7 +741,7 @@ begin
       LastId := Item.Id;
     end;
     if FOffsetEnd then
-      InsertDateLastMessage(GetMessageDate(GetFirstMessage), LastId);
+      InsertDateLastMessage(GetMessageDate(GetFirstMessage), LastId - 0.1);
   finally
     LayoutMessageList.EndUpdate;
   end;
@@ -842,7 +854,7 @@ begin
   FMessages.Add(TMessageFrame.Create(Frame.TagFloat, Frame));
 end;
 
-procedure TFrameChat.InsertDateLastMessage(LastDate: TDateTime; MessageId: Int64);
+procedure TFrameChat.InsertDateLastMessage(LastDate: TDateTime; MessageId: Extended);
 begin
   if LastDate > 0 then
   begin
@@ -863,7 +875,7 @@ begin
     var LastDate := GetMessageDate(GetFirstMessage);
     if LastDate > 0 then
       if not IsSameDay(Item.Date, LastDate) then
-        InsertDateLastMessage(LastDate, Item.Id);
+        InsertDateLastMessage(LastDate, Item.Id + 0.1);
   end;
 
   if not Assigned(Item.Action) then
@@ -1219,6 +1231,12 @@ begin
           ((Control.BoundsRect.Top < ABottom) and
           (Control.BoundsRect.Bottom > ATop));
         (Control as TFrameMessage).Visibility := Vis;
+      end
+      else if Control is TFrameMessageDate then
+      begin
+        var Vis :=((Control.BoundsRect.Top >= ATop) and
+          (Control.BoundsRect.Bottom <= ABottom));
+        (Control as TFrameMessageDate).Visibility := Vis;
       end;
   end
   else
@@ -1264,6 +1282,37 @@ begin
   TAnimator.AnimateFloat(CircleToDown, 'Opacity', 0);
 end;
 
+procedure TFrameChat.UpdateActualDate;
+var
+  LDate: TDateTime;
+begin
+  LDate := 0;
+  for var Item in FMessages do
+    if (LDate = 0) and (Item.Frame is TFrameMessageDate) then
+    begin
+      var Frame :=(Item.Frame as TFrameMessageDate);
+      if Frame.Visibility then
+        LDate := Frame.Date;
+    end
+    else if Item.Frame is TFrameMessage then
+    begin
+      var Frame :=(Item.Frame as TFrameMessage);
+      if Frame.Visibility then
+      begin
+        LabelActualDate.Text := HumanDateTime(Frame.Date);
+        LayoutActualDate.Visible := Frame.Date <> LDate;
+        if LayoutActualDate.Visible then
+        begin
+          TAnimator.DetachPropertyAnimation(RoundRectActualDate, 'Opacity');
+          if RoundRectActualDate.Opacity <> 1 then
+            TAnimator.AnimateFloat(RoundRectActualDate, 'Opacity', 1);
+          TAnimator.AnimateFloatDelay(RoundRectActualDate, 'Opacity', 0, 0.2, 3);
+        end;
+        Break;
+      end;
+    end;
+end;
+
 procedure TFrameChat.VertScrollBoxMessagesViewportPositionChange(Sender: TObject; const OldViewportPosition, NewViewportPosition: TPointF; const ContentSizeChanged: Boolean);
 begin
   CalcDisappear;
@@ -1274,6 +1323,7 @@ begin
     HideHints
   else
     ShowHints;
+  UpdateActualDate;
 end;
 
 procedure TFrameChat.FOnReadyImage(const Sender: TObject; const M: TMessage);

@@ -13,12 +13,15 @@ type
   private
     FDate: TDateTime;
     FMessageId: Extended;
+    FVisibility: Boolean;
     procedure SetDate(const Value: TDateTime);
+    procedure SetVisibility(const Value: Boolean);
   public
-    procedure Fill(ADate: TDateTime; AMessageId: Int64);
+    procedure Fill(ADate: TDateTime; AMessageId: Extended);
     constructor Create(AOwner: TComponent); override;
     property Date: TDateTime read FDate write SetDate;
     property MessageId: Extended read FMessageId;
+    property Visibility: Boolean read FVisibility write SetVisibility;
   end;
 
 implementation
@@ -36,16 +39,22 @@ begin
   Name := '';
 end;
 
-procedure TFrameMessageDate.Fill(ADate: TDateTime; AMessageId: Int64);
+procedure TFrameMessageDate.Fill(ADate: TDateTime; AMessageId: Extended);
 begin
-  FMessageId := AMessageId - 0.1;
+  Date := ADate;
+  FMessageId := AMessageId;
   TagFloat := FMessageId;
-  LabelText.Text := HumanDateTime(IncSecond(ADate));
 end;
 
 procedure TFrameMessageDate.SetDate(const Value: TDateTime);
 begin
   FDate := Value;
+  LabelText.Text := HumanDateTime(IncSecond(Value));
+end;
+
+procedure TFrameMessageDate.SetVisibility(const Value: Boolean);
+begin
+  FVisibility := Value;
 end;
 
 end.
