@@ -2228,6 +2228,8 @@ object FormMain: TFormMain
     OnRecoverMessages = UserEventsRecoverMessages
     OnUserOffline = UserEventsUserOffline
     OnUserOnline = UserEventsUserOnline
+    OnUsersTyping = UserEventsUsersTyping
+    OnUserTyping = UserEventsUserTyping
     Version = '3'
     VK = VK
     Left = 378

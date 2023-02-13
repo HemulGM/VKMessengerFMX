@@ -11,7 +11,7 @@ uses
   FMX.Memo.Types, FMX.ScrollBox, FMX.Memo, ChatFMX.Frame.Loading,
   VK.Entity.Common.ExtendedList, ChatFMX.Frame.Message, ChatFMX.Classes,
   ChatFMX.Frame.Attachment.PinnedMessage, System.Generics.Collections,
-  VK.Entity.Keyboard, ChatFMX.Frame.Keyboard, FMX.Effects;
+  VK.Entity.Keyboard, ChatFMX.Frame.Keyboard, FMX.Effects, VK.UserEvents;
 
 type
   TFrameChat = class;
@@ -130,6 +130,7 @@ type
     RoundRectActualDate: TRoundRect;
     LabelActualDate: TLabel;
     ShadowEffect1: TShadowEffect;
+    TimerActivity: TTimer;
     procedure VertScrollBoxMessagesResize(Sender: TObject);
     procedure LayoutMessageListResize(Sender: TObject);
     procedure LayoutUnselClick(Sender: TObject);
@@ -148,6 +149,7 @@ type
     procedure ButtonSelAsSPAMClick(Sender: TObject);
     procedure CheckBoxKeyboardChange(Sender: TObject);
     procedure LabelActualDateResize(Sender: TObject);
+    procedure TimerActivityTimer(Sender: TObject);
   private
     FConversationId: TVkPeerId;
     FVK: TCustomVK;
@@ -250,6 +252,8 @@ type
     procedure FOnReplyMessageClick(Sender: TObject);
     procedure ScrollTo(Frame: TFrameMessage);
     procedure UpdateActualDate;
+    procedure FOnUsersTyping(const Sender: TObject; const M: TMessage);
+    procedure ActivityTyping(Data: TChatTypingData);
     property HeadMode: THeadMode read FHeadMode write SetHeadMode;
   protected
     procedure SetVisible(const Value: Boolean); override;
@@ -474,6 +478,7 @@ begin
   FCurrentKeyboard := nil;
   LayoutActualDate.Visible := False;
   RectangleDesign.Visible := False;
+  LayoutActivityContent.Visible := False;
   FPinnedMessage := nil;
   FPinnedMessageId := -1;
   FChatScroll := TSmoothScroll.CreateFor(VertScrollBoxMessages);
@@ -695,6 +700,23 @@ var
 begin
   if Event.Data.PeerId <> NormalizePeerId(FConversationId) then
     Exit;
+end;
+
+procedure TFrameChat.ActivityTyping(Data: TChatTypingData);
+begin
+  TimerActivity.Enabled := False;
+  TimerActivity.Enabled := True;
+  LayoutActivityContent.Visible := True;
+  LabelActivity.Text := Length(Data.UserIds).ToString + ' печатает';
+end;
+
+procedure TFrameChat.FOnUsersTyping(const Sender: TObject; const M: TMessage);
+var
+  Event: TEventUsersTyping absolute M;
+begin
+  if Event.Data.PeerId <> NormalizePeerId(FConversationId) then
+    Exit;
+  ActivityTyping(Event.Data);
 end;
 
 procedure TFrameChat.FOnNewMessage(const Sender: TObject; const M: TMessage);
@@ -976,6 +998,7 @@ begin
   Event.Subscribe(TEventDeleteMessage, FOnDeleteMessage);
   Event.Subscribe(TEventMessageChange, FOnChangeMessage);
   Event.Subscribe(TEventReadMessages, FOnReadMessage);
+  Event.Subscribe(TEventUsersTyping, FOnUsersTyping);
   ReloadAsync;
 end;
 
@@ -987,6 +1010,7 @@ begin
   Event.Unsubscribe(TEventDeleteMessage, FOnDeleteMessage);
   Event.Unsubscribe(TEventMessageChange, FOnChangeMessage);
   Event.Unsubscribe(TEventReadMessages, FOnReadMessage);
+  Event.Unsubscribe(TEventUsersTyping, FOnUsersTyping);
   Event.QueueUnsubscribe(Self);
   FMessages.Free;
   inherited;
@@ -1679,6 +1703,12 @@ end;
 procedure TFrameChat.ShowSearch(const Value: Boolean);
 begin
 
+end;
+
+procedure TFrameChat.TimerActivityTimer(Sender: TObject);
+begin
+  TimerActivity.Enabled := False;
+  LayoutActivityContent.Visible := False;
 end;
 
 procedure TFrameChat.SetVK(const Value: TCustomVK);

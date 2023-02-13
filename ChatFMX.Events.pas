@@ -48,6 +48,11 @@ type
     constructor Create(MessageChangeData: TMessageChangeData); reintroduce;
   end;
 
+  TEventUsersTyping = class(TMessage)
+    Data: TChatTypingData;
+    constructor Create(AData: TChatTypingData); reintroduce;
+  end;
+
   TEventChangeSort = class(TMessage)
     PeerId: TVkPeerId;
     NewId: Int64;
@@ -211,6 +216,14 @@ begin
   PeerId := APeerId;
   NewId := ANewId;
   IsMajor := AIsMajor;
+end;
+
+{ TEventUsersTyping }
+
+constructor TEventUsersTyping.Create(AData: TChatTypingData);
+begin
+  inherited Create;
+  Data := AData;
 end;
 
 end.

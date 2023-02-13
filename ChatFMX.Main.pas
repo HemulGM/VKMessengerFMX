@@ -104,6 +104,8 @@ type
     procedure ListBoxChatsCompare(Item1, Item2: TListBoxItem; var Result: Integer);
     procedure UserEventsChangeConversationMajorId(Sender: TObject; PeerId: TVkPeerId; const NewId: Int64);
     procedure UserEventsChangeConversationMinorId(Sender: TObject; PeerId: TVkPeerId; const NewId: Int64);
+    procedure UserEventsUsersTyping(Sender: TObject; Data: TChatTypingData);
+    procedure UserEventsUserTyping(Sender: TObject; UserId: TVkPeerId; ChatId: Int64);
   private
     FToken: string;
     FChangePasswordHash: string;
@@ -483,6 +485,19 @@ end;
 procedure TFormMain.UserEventsUserOnline(Sender: TObject; UserId: TVkPeerId; VkPlatform: TVkPlatform; TimeStamp: TDateTime);
 begin
   Event.Send(TEventUserStatus.Create(UserId, False, VkPlatform));
+end;
+
+procedure TFormMain.UserEventsUsersTyping(Sender: TObject; Data: TChatTypingData);
+begin
+  Event.Send(TEventUsersTyping.Create(Data));
+end;
+
+procedure TFormMain.UserEventsUserTyping(Sender: TObject; UserId: TVkPeerId; ChatId: Int64);
+begin
+  var Data: TChatTypingData;
+  Data.UserIds := [UserId];
+  Data.PeerId := ChatId;
+  Event.Send(TEventUsersTyping.Create(Data));
 end;
 
 procedure TFormMain.LoadChat(PeerId: TVkPeerId);

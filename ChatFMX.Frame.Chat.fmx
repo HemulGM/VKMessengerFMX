@@ -670,7 +670,6 @@ object FrameChat: TFrameChat
               Size.Width = 641.000000000000000000
               Size.Height = 34.000000000000000000
               Size.PlatformDefault = False
-              Visible = False
               TabOrder = 0
               inline FrameLoadingActivity: TFrameLoading
                 Align = Left
@@ -1131,5 +1130,12 @@ object FrameChat: TFrameChat
         end
       end
     end
+  end
+  object TimerActivity: TTimer
+    Enabled = False
+    Interval = 5000
+    OnTimer = TimerActivityTimer
+    Left = 440
+    Top = 725
   end
 end
