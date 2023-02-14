@@ -5,23 +5,16 @@ interface
 uses
   System.SysUtils, System.Types, System.UITypes, System.Classes, System.Variants,
   FMX.Types, FMX.Graphics, FMX.Controls, FMX.Forms, FMX.Dialogs, FMX.StdCtrls,
-  FMX.Controls.Presentation;
+  FMX.Controls.Presentation, ChatFMX.Frame.Message.Base;
 
 type
-  TFrameMessageDate = class(TFrame)
+  TFrameMessageDate = class(TFrameMessageBase)
     LabelText: TLabel;
   private
-    FDate: TDateTime;
-    FMessageId: Extended;
-    FVisibility: Boolean;
-    procedure SetDate(const Value: TDateTime);
-    procedure SetVisibility(const Value: Boolean);
+  protected
+    procedure SetDate(const Value: TDateTime); override;
   public
     procedure Fill(ADate: TDateTime; AMessageId: Extended);
-    constructor Create(AOwner: TComponent); override;
-    property Date: TDateTime read FDate write SetDate;
-    property MessageId: Extended read FMessageId;
-    property Visibility: Boolean read FVisibility write SetVisibility;
   end;
 
 implementation
@@ -33,28 +26,17 @@ uses
 
 { TFrameMessageDate }
 
-constructor TFrameMessageDate.Create(AOwner: TComponent);
-begin
-  inherited;
-  Name := '';
-end;
-
 procedure TFrameMessageDate.Fill(ADate: TDateTime; AMessageId: Extended);
 begin
   Date := ADate;
-  FMessageId := AMessageId;
-  TagFloat := FMessageId;
+  MessageId := Trunc(AMessageId);
+  TagFloat := AMessageId;
 end;
 
 procedure TFrameMessageDate.SetDate(const Value: TDateTime);
 begin
-  FDate := Value;
-  LabelText.Text := HumanDateTime(IncSecond(Value));
-end;
-
-procedure TFrameMessageDate.SetVisibility(const Value: Boolean);
-begin
-  FVisibility := Value;
+  inherited;
+  LabelText.Text := HumanDateTime(Date);
 end;
 
 end.

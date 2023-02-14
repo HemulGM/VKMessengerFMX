@@ -1,0 +1,5 @@
+object FrameMessageBase: TFrameMessageBase
+  Size.Width = 657.000000000000000000
+  Size.Height = 376.000000000000000000
+  Size.PlatformDefault = False
+end

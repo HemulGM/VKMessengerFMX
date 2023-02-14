@@ -1,9 +1,7 @@
-object FrameMessageAction: TFrameMessageAction
+inherited FrameMessageAction: TFrameMessageAction
   Padding.Top = 6.000000000000000000
   Padding.Bottom = 7.000000000000000000
-  Size.Width = 558.000000000000000000
-  Size.Height = 45.000000000000000000
-  Size.PlatformDefault = False
+  Size.Height = 41.000000000000000000
   object LabelText: TLabel
     Align = Top
     AutoSize = True
@@ -12,7 +10,7 @@ object FrameMessageAction: TFrameMessageAction
     Margins.Right = 30.000000000000000000
     Position.X = 30.000000000000000000
     Position.Y = 6.000000000000000000
-    Size.Width = 498.000000000000000000
+    Size.Width = 597.000000000000000000
     Size.Height = 31.000000000000000000
     Size.PlatformDefault = False
     TextSettings.Font.Family = 'Roboto'

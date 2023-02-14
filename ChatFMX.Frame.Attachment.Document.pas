@@ -148,7 +148,7 @@ begin
     Ext := Document.Ext;
     if Assigned(Document.Preview) and Assigned(Document.Preview.Photo) then
     begin
-      var Size := Document.Preview.Photo.Sizes.GetSizeFromHeight(100);
+      var Size := Document.Preview.Photo.Sizes.GetSizeFromHeight(100000);
       if Assigned(Size) then
       begin
         Height := 100;

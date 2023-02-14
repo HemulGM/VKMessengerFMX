@@ -1,11 +1,10 @@
-object FrameMessage: TFrameMessage
+inherited FrameMessage: TFrameMessage
   ClipChildren = True
   Cursor = crHandPoint
   Margins.Left = 7.000000000000000000
   Margins.Bottom = 4.000000000000000000
   Size.Width = 594.000000000000000000
   Size.Height = 302.000000000000000000
-  Size.PlatformDefault = False
   OnMouseUp = FrameMouseUp
   OnMouseEnter = FrameMouseEnter
   OnMouseLeave = FrameMouseLeave
@@ -150,7 +149,7 @@ object FrameMessage: TFrameMessage
         ShowScrollBars = False
         StyledSettings = [Style, FontColor]
         TextSettings.Font.Family = 'Roboto'
-        TextSettings.Font.Size = 13.000000000000000000
+        TextSettings.Font.Size = 13.100000381469730000
         TextSettings.WordWrap = True
         OnChange = MemoTextChange
         Align = Top

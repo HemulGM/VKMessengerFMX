@@ -12,12 +12,13 @@ uses
   ChatFMX.Frame.Attachment.Audio, ChatFMX.Frame.Attachment.Document,
   VK.Entity.Geo, ChatFMX.Frame.Attachment.Geo,
   ChatFMX.Frame.Attachment.ReplyMessage, VK.Entity.Common.ExtendedList,
-  VK.Entity.Keyboard, ChatFMX.Classes, System.Threading;
+  VK.Entity.Keyboard, ChatFMX.Classes, System.Threading,
+  ChatFMX.Frame.Message.Base;
 
 type
   TMessageSubType = (stNone, stGift, stMoneyTransfer, stMoneyRequest);
 
-  TFrameMessage = class(TFrame)
+  TFrameMessage = class(TFrameMessageBase)
     LayoutLeft: TLayout;
     RectangleBG: TRectangle;
     LayoutLeftTop: TLayout;
@@ -68,7 +69,6 @@ type
     procedure LabelRestoreMessageClick(Sender: TObject);
     procedure PathStarClick(Sender: TObject);
   private
-    FVK: TCustomVK;
     FText: string;
     FFromText: string;
     FImageUrl: string;
@@ -81,15 +81,12 @@ type
     FIsSelected: Boolean;
     FWasSelectedText: Boolean;
     FOnSelectedChanged: TNotifyEvent;
-    FDate: TDateTime;
     FUpdateTime: TDateTime;
     FIsGift: Boolean;
     FCanAnswer: Boolean;
     FFromSex: TVkSex;
-    FVisibility: Boolean;
     FMessageSubType: TMessageSubType;
     FChatInfo: TChatInfo;
-    FMessageId: Int64;
     FIsPinned: Boolean;
     FIsDeleted: Boolean;
     FConversationMessageId: Int64;
@@ -112,7 +109,6 @@ type
     procedure CreateAutioMessages(Items: TVkAttachmentArray; Msg: TVkMessage);
     procedure CreateSticker(Items: TVkAttachmentArray);
     procedure CreateVideos(Items: TVkAttachmentArray);
-    procedure SetDate(const Value: TDateTime);
     procedure CreateAudios(Items: TVkAttachmentArray);
     procedure CreateDocs(Items: TVkAttachmentArray);
     procedure CreateGeo(Value: TVkGeo);
@@ -126,7 +122,6 @@ type
     procedure CreatePosts(Items: TVkAttachmentArray; Data: TVkEntityExtendedList<TVkMessage>);
     procedure SetFromSex(const Value: TVkSex);
     procedure CreateCalls(Items: TVkAttachmentArray);
-    procedure SetVisibility(const Value: Boolean);
     procedure BroadcastVisible(const Value: Boolean);
     procedure CreateAlbums(Items: TVkAttachmentArray);
     procedure CreateMarket(Items: TVkAttachmentArray);
@@ -149,8 +144,12 @@ type
     procedure CreateStories(Items: TVkAttachmentArray; Data: TVkEntityExtendedList<TVkMessage>);
     procedure FOnReplyMessageAttachClick(Sender: TObject);
     procedure SetOnReplyMessageClick(const Value: TNotifyEvent);
+    procedure ClearAttachments;
+  protected
+    procedure SetVisibility(const Value: Boolean); override;
+    procedure SetDate(const Value: TDateTime); override;
   public
-    constructor Create(AOwner: TComponent; AVK: TCustomVK); reintroduce;
+    constructor Create(AOwner: TComponent; AVK: TCustomVK); override;
     destructor Destroy; override;
     procedure Fill(Item: TVkMessage; Data: TVkEntityExtendedList<TVkMessage>; AChatInfo: TChatInfo);
     property Text: string read FText write SetText;
@@ -163,21 +162,19 @@ type
     property IsImportant: Boolean read FIsImportant write SetIsImportant;
     property IsSelected: Boolean read FIsSelected write SetIsSelected;
     property OnSelectedChanged: TNotifyEvent read FOnSelectedChanged write SetOnSelectedChanged;
-    property Date: TDateTime read FDate write SetDate;
     property UpdateTime: TDateTime read FUpdateTime write SetUpdateTime;
     property IsGift: Boolean read FIsGift write SetIsGift;
     property ChatCanAnswer: Boolean read FCanAnswer write SetCanAnswer;
     property FromSex: TVkSex read FFromSex write SetFromSex;
-    property Visibility: Boolean read FVisibility write SetVisibility;
     property MessageSubType: TMessageSubType read FMessageSubType write SetMessageSubType;
     property ChatInfo: TChatInfo read FChatInfo write SetChatInfo;
     property IsPinned: Boolean read FIsPinned write SetIsPinned;
-    property MessageId: Int64 read FMessageId;
     property ConversationMessageId: Int64 read FConversationMessageId;
     property IsDeleted: Boolean read FIsDeleted write SetIsDeleted;
     procedure UpdateFlags(ChangeType: TVkFlagsChangeType; Flags: TVkMessageFlags);
     property OnReplyMessageClick: TNotifyEvent read FOnReplyMessageClick write SetOnReplyMessageClick;
-    procedure Flash;
+    procedure UpdateVisibility;
+    procedure Flash; override;
   end;
 
 implementation
@@ -276,9 +273,8 @@ end;
 
 constructor TFrameMessage.Create(AOwner: TComponent; AVK: TCustomVK);
 begin
-  inherited Create(AOwner);
+  inherited Create(AOwner, AVK);
   MessageSubType := stNone;
-  FVisibility := False;
   {$IFDEF ADAPTIVE}
   LayoutSelectedIcon.Visible := False;
   LayoutLeft.Width := 51;
@@ -287,8 +283,6 @@ begin
   CircleAvatar.Margins.Right := 7;
   MemoText.HitTest := False;
   {$ENDIF}
-  Name := '';
-  FVK := AVK;
   RectangleBG.Visible := False;
   RectangleUnread.Visible := False;
   PathSelected.Visible := False;
@@ -309,10 +303,22 @@ begin
   inherited;
 end;
 
+procedure TFrameMessage.ClearAttachments;
+begin
+  LayoutClient.BeginUpdate;
+  try
+    for var i := Pred(LayoutClient.ControlsCount) to 0 do
+      if LayoutClient.Controls[i] is TFrameAttachment then
+        LayoutClient.Controls[i].Free;
+  finally
+    LayoutClient.EndUpdate;
+  end;
+end;
+
 procedure TFrameMessage.Fill(Item: TVkMessage; Data: TVkEntityExtendedList<TVkMessage>; AChatInfo: TChatInfo);
 begin
-  FMessageId := Item.Id;
-  TagFloat := FMessageId;
+  MessageId := Item.Id;
+  TagFloat := MessageId;
   FConversationMessageId := Item.ConversationMessageId;
   IsPinned := Item.PinnedAt <> 0;
   ChatInfo := AChatInfo;
@@ -320,12 +326,17 @@ begin
   Text := Item.Text;
   Date := Item.Date;
   ImageUrl := '';
-  IsSelfMessage := Item.FromId = FVK.UserId;
+  IsSelfMessage := Item.FromId = VK.UserId;
   IsCanEdit := HoursBetween(Now, Item.Date) < 24;
   IsImportant := Item.Important;
   IsUnread := False;
   UpdateTime := Item.UpdateTime;
   IsGift := False;
+  //Clear
+  ClearMedia;
+  ClearAttachments;
+  LayoutFwdMessages.Visible := False;
+  LayoutFwdMessages.Tag := 0;
 
   var P2P := ChatInfo.IsP2P;
   IsUnread := Item.Id > ChatInfo.OutRead;
@@ -395,7 +406,7 @@ end;
 
 procedure TFrameMessage.CreateKeyborad(Keyboard: TVkKeyboard);
 begin
-  var Frame := TFrameAttachmentKeyboard.Create(LayoutClient, FVK);
+  var Frame := TFrameAttachmentKeyboard.Create(LayoutClient, VK);
   Frame.Parent := LayoutClient;
   Frame.Position.Y := 10000;
   Frame.Align := TAlignLayout.Top;
@@ -408,7 +419,7 @@ begin
   for var Item in Items do
     if Item.&Type = TVkAttachmentType.Wall then
     begin
-      var Frame := TFrameAttachmentWall.Create(LayoutClient, FVK);
+      var Frame := TFrameAttachmentWall.Create(LayoutClient, VK);
       Frame.Parent := LayoutClient;
       Frame.Position.Y := 10000;
       Frame.Align := TAlignLayout.Top;
@@ -421,7 +432,7 @@ begin
   for var Item in Items do
     if Item.&Type = TVkAttachmentType.AudioPlaylist then
     begin
-      var Frame := TFrameAttachmentAudioPlaylist.Create(LayoutClient, FVK);
+      var Frame := TFrameAttachmentAudioPlaylist.Create(LayoutClient, VK);
       Frame.Parent := LayoutClient;
       Frame.Position.Y := 10000;
       Frame.Align := TAlignLayout.Top;
@@ -434,7 +445,7 @@ begin
   for var Item in Items do
     if Item.&Type = TVkAttachmentType.Story then
     begin
-      var Frame := TFrameAttachmentStory.Create(LayoutClient, FVK);
+      var Frame := TFrameAttachmentStory.Create(LayoutClient, VK);
       Frame.Parent := LayoutClient;
       Frame.Position.Y := 10000;
       Frame.Align := TAlignLayout.Top;
@@ -447,7 +458,7 @@ begin
   for var Item in Items do
     if Item.&Type = TVkAttachmentType.Album then
     begin
-      var Frame := TFrameAttachmentAlbum.Create(LayoutClient, FVK);
+      var Frame := TFrameAttachmentAlbum.Create(LayoutClient, VK);
       Frame.Parent := LayoutClient;
       Frame.Position.Y := 10000;
       Frame.Align := TAlignLayout.Top;
@@ -460,7 +471,7 @@ begin
   for var Item in Items do
     if Item.&Type = TVkAttachmentType.Market then
     begin
-      var Frame := TFrameAttachmentMarket.Create(LayoutClient, FVK);
+      var Frame := TFrameAttachmentMarket.Create(LayoutClient, VK);
       Frame.Parent := LayoutClient;
       Frame.Position.Y := 10000;
       Frame.Align := TAlignLayout.Top;
@@ -473,7 +484,7 @@ begin
   for var Item in Items do
     if Item.&Type = TVkAttachmentType.Graffiti then
     begin
-      var Frame := TFrameAttachmentGraffiti.Create(LayoutClient, FVK);
+      var Frame := TFrameAttachmentGraffiti.Create(LayoutClient, VK);
       Frame.Parent := LayoutClient;
       Frame.Position.Y := 10000;
       Frame.Align := TAlignLayout.Top;
@@ -486,7 +497,7 @@ begin
   for var Item in Items do
     if Item.&Type = TVkAttachmentType.Poll then
     begin
-      var Frame := TFrameAttachmentPoll.Create(LayoutClient, FVK);
+      var Frame := TFrameAttachmentPoll.Create(LayoutClient, VK);
       Frame.Parent := LayoutClient;
       Frame.Position.Y := 10000;
       Frame.Align := TAlignLayout.Top;
@@ -499,7 +510,7 @@ begin
   for var Item in Items do
     if Item.&Type in [TVkAttachmentType.MoneyTransfer, TVkAttachmentType.MoneyRequest] then
     begin
-      var Frame := TFrameAttachmentMoney.Create(LayoutClient, FVK);
+      var Frame := TFrameAttachmentMoney.Create(LayoutClient, VK);
       Frame.Parent := LayoutClient;
       Frame.Position.Y := 10000;
       Frame.Align := TAlignLayout.Top;
@@ -522,7 +533,7 @@ procedure TFrameMessage.CreateFwdMessages(Items: TArray<TVkMessage>; Data: TVkEn
 begin
   for var Item in Items do
   begin
-    var Frame := TFrameAttachmentMessage.Create(LayoutFwdMessages, FVK);
+    var Frame := TFrameAttachmentMessage.Create(LayoutFwdMessages, VK);
     Frame.OnSelect := FOnAttachSelect;
     Frame.Parent := LayoutFwdMessages;
     Frame.Position.Y := 10000;
@@ -536,7 +547,7 @@ end;
 
 procedure TFrameMessage.CreateReplyMessage(Item: TVkMessage; Data: TVkEntityExtendedList<TVkMessage>);
 begin
-  var Frame := TFrameAttachmentReplyMessage.Create(LayoutClient, FVK);
+  var Frame := TFrameAttachmentReplyMessage.Create(LayoutClient, VK);
   Frame.OnSelect := FOnAttachSelect;
   Frame.Parent := LayoutClient;
   Frame.Align := TAlignLayout.MostTop;
@@ -563,7 +574,7 @@ end;
 
 procedure TFrameMessage.CreateGeo(Value: TVkGeo);
 begin
-  var Frame := TFrameAttachmentGeo.Create(LayoutClient, FVK);
+  var Frame := TFrameAttachmentGeo.Create(LayoutClient, VK);
   Frame.Parent := LayoutClient;
   Frame.Position.Y := 10000;
   Frame.Align := TAlignLayout.Top;
@@ -580,7 +591,7 @@ begin
   for var Control in FlowLayoutMedia.Controls do
     if Control is TFrameAttachmentPhoto then
     begin
-      var Id :=(Control as TFrameAttachmentPhoto).Id;
+      var Id := (Control as TFrameAttachmentPhoto).Id;
       Items[i] := Id;
       if Id = PhotoId then
         Index := i;
@@ -602,7 +613,7 @@ begin
   if CollectPhotosFrom(Frame.Id, Items, CurrentIndex) then
   begin
     var Form := Application.MainForm;
-    with TFrameWindowPhoto.Create(Form, FVK) do
+    with TFrameWindowPhoto.Create(Form, VK) do
     begin
       Parent := Form;
       Align := TAlignLayout.Contents;
@@ -625,7 +636,7 @@ begin
   begin
     if Item.&Type = TVkAttachmentType.Photo then
     begin
-      var Frame := TFrameAttachmentPhoto.Create(FlowLayoutMedia, FVK);
+      var Frame := TFrameAttachmentPhoto.Create(FlowLayoutMedia, VK);
       Frame.Parent := FlowLayoutMedia;
       {$IFDEF ADAPTIVE}
       Frame.OnTap := FOnPhotosTap;
@@ -636,7 +647,7 @@ begin
     end;
     if (Item.&Type = TVkAttachmentType.Doc) and (Assigned(Item.Doc.Preview)) then
     begin
-      var Frame := TFrameAttachmentDocument.Create(FlowLayoutMedia, FVK);
+      var Frame := TFrameAttachmentDocument.Create(FlowLayoutMedia, VK);
       Frame.Parent := FlowLayoutMedia;
       Frame.Fill(Item.Doc, True);
     end;
@@ -648,7 +659,7 @@ begin
   for var Item in Items do
     if Item.&Type = TVkAttachmentType.Video then
     begin
-      var Frame := TFrameAttachmentVideo.Create(FlowLayoutMedia, FVK);
+      var Frame := TFrameAttachmentVideo.Create(FlowLayoutMedia, VK);
       Frame.Parent := FlowLayoutMedia;
       Frame.Fill(Item.Video);
     end;
@@ -660,7 +671,7 @@ begin
     if Item.&Type = TVkAttachmentType.Gift then
     begin
       IsGift := True;
-      var Frame := TFrameAttachmentGift.Create(LayoutClient, FVK);
+      var Frame := TFrameAttachmentGift.Create(LayoutClient, VK);
       Frame.Parent := LayoutClient;
       Frame.Position.Y := 10000;
       Frame.Align := TAlignLayout.Top;
@@ -673,7 +684,7 @@ begin
   for var Item in Items do
     if Item.&Type = TVkAttachmentType.Sticker then
     begin
-      var Frame := TFrameAttachmentSticker.Create(LayoutClient, FVK);
+      var Frame := TFrameAttachmentSticker.Create(LayoutClient, VK);
       Frame.Parent := LayoutClient;
       Frame.Position.Y := 10000;
       Frame.Align := TAlignLayout.Top;
@@ -686,7 +697,7 @@ begin
   for var Item in Items do
     if Item.&Type = TVkAttachmentType.AudioMessage then
     begin
-      var Frame := TFrameAttachmentAudioMessage.Create(LayoutClient, FVK);
+      var Frame := TFrameAttachmentAudioMessage.Create(LayoutClient, VK);
       Frame.Parent := LayoutClient;
       Frame.Position.Y := 10000;
       Frame.Align := TAlignLayout.Top;
@@ -699,7 +710,7 @@ begin
   for var Item in Items do
     if Item.&Type = TVkAttachmentType.Audio then
     begin
-      var Frame := TFrameAttachmentAudio.Create(LayoutClient, FVK);
+      var Frame := TFrameAttachmentAudio.Create(LayoutClient, VK);
       Frame.Parent := LayoutClient;
       Frame.Position.Y := 10000;
       Frame.Align := TAlignLayout.Top;
@@ -712,7 +723,7 @@ begin
   for var Item in Items do
     if Item.&Type = TVkAttachmentType.Link then
     begin
-      var Frame := TFrameAttachmentLink.Create(LayoutClient, FVK);
+      var Frame := TFrameAttachmentLink.Create(LayoutClient, VK);
       Frame.Parent := LayoutClient;
       Frame.Position.Y := 10000;
       Frame.Align := TAlignLayout.Top;
@@ -725,7 +736,7 @@ begin
   for var Item in Items do
     if (Item.&Type = TVkAttachmentType.Doc) and (not Assigned(Item.Doc.Preview)) then
     begin
-      var Frame := TFrameAttachmentDocument.Create(LayoutClient, FVK);
+      var Frame := TFrameAttachmentDocument.Create(LayoutClient, VK);
       Frame.Parent := LayoutClient;
       Frame.Position.Y := 10000;
       Frame.Align := TAlignLayout.Top;
@@ -738,7 +749,7 @@ begin
   for var Item in Items do
     if Item.&Type = TVkAttachmentType.Call then
     begin
-      var Frame := TFrameAttachmentCall.Create(LayoutClient, FVK);
+      var Frame := TFrameAttachmentCall.Create(LayoutClient, VK);
       Frame.Parent := LayoutClient;
       Frame.Position.Y := 10000;
       Frame.Align := TAlignLayout.Top;
@@ -801,7 +812,7 @@ begin
   TTask.Run(
     procedure
     begin
-      FVK.Messages.Restore(MessageId);
+      VK.Messages.Restore(MessageId);
     end);
 end;
 
@@ -852,7 +863,7 @@ begin
   TTask.Run(
     procedure
     begin
-      FVK.Messages.MarkAsImportant(MsgId, MessageId, Mark);
+      VK.Messages.MarkAsImportant(MsgId, MessageId, Mark);
     end);
 end;
 
@@ -868,9 +879,9 @@ end;
 
 procedure TFrameMessage.SetDate(const Value: TDateTime);
 begin
-  FDate := Value;
-  LabelTime.Text := FormatDateTime('HH:nn', FDate);
-  LabelTime.Hint := FormatDateTime('c', FDate);
+  inherited;
+  LabelTime.Text := FormatDateTime('HH:nn', Date);
+  LabelTime.Hint := FormatDateTime('c', Date);
 end;
 
 procedure TFrameMessage.SetFromSex(const Value: TVkSex);
@@ -1107,6 +1118,11 @@ begin
   end;
 end;
 
+procedure TFrameMessage.UpdateVisibility;
+begin
+  BroadcastVisible(Visibility);
+end;
+
 procedure TFrameMessage.SetMessageSubType(const Value: TMessageSubType);
 begin
   FMessageSubType := Value;
@@ -1186,10 +1202,8 @@ end;
 
 procedure TFrameMessage.SetVisibility(const Value: Boolean);
 begin
-  if FVisibility = Value then
-    Exit;
-  FVisibility := Value;
-  if FVisibility then
+  inherited;
+  if Visibility then
     Opacity := 1
   else
     Opacity := 0;
@@ -1200,7 +1214,7 @@ begin
   end
   else
     CircleAvatar.Fill.Bitmap.Bitmap := nil;
-  BroadcastVisible(FVisibility);
+  UpdateVisibility;
 end;
 
 end.

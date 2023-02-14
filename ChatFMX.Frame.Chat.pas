@@ -11,7 +11,8 @@ uses
   FMX.Memo.Types, FMX.ScrollBox, FMX.Memo, ChatFMX.Frame.Loading,
   VK.Entity.Common.ExtendedList, ChatFMX.Frame.Message, ChatFMX.Classes,
   ChatFMX.Frame.Attachment.PinnedMessage, System.Generics.Collections,
-  VK.Entity.Keyboard, ChatFMX.Frame.Keyboard, FMX.Effects, VK.UserEvents;
+  VK.Entity.Keyboard, ChatFMX.Frame.Keyboard, FMX.Effects, VK.UserEvents,
+  ChatFMX.Frame.Message.Base;
 
 type
   TFrameChat = class;
@@ -37,9 +38,9 @@ type
   end;
 
   TMessageFrame = record
-    Frame: TFrame;
+    Frame: TFrameMessageBase;
     Id: Extended;
-    class function Create(Id: Extended; Frame: TFrame): TMessageFrame; static;
+    class function Create(Id: Extended; Frame: TFrameMessageBase): TMessageFrame; static;
   end;
 
   TMessages = class(TList<TMessageFrame>)
@@ -97,8 +98,8 @@ type
     RectangleAddToFriends: TRectangle;
     LayoutAddToFriends: TLayout;
     LabelAddFriendHint: TLabel;
-    Button1: TButton;
-    Layout16: TLayout;
+    ButtonAddToFriends: TButton;
+    LayoutCloseAddToFriends: TLayout;
     PathCloseAddToFriends: TPath;
     RectangleFooterBlock: TRectangle;
     LayoutBlockInfo: TLayout;
@@ -111,7 +112,7 @@ type
     ColorAnimationToDown: TColorAnimation;
     RectanglePinnedMessage: TRectangle;
     LayoutPinnedMessageClient: TLayout;
-    Layout2: TLayout;
+    LayoutUnpinMessage: TLayout;
     PathUnpinMessage: TPath;
     Layout6: TLayout;
     Path5: TPath;
@@ -141,8 +142,6 @@ type
     procedure CircleToDownClick(Sender: TObject);
     procedure ButtonSendClick(Sender: TObject);
     procedure MemoTextKeyDown(Sender: TObject; var Key: Word; var KeyChar: Char; Shift: TShiftState);
-    procedure PathCloseAddToFriendsClick(Sender: TObject);
-    procedure PathUnpinMessageClick(Sender: TObject);
     procedure ButtonSelPinClick(Sender: TObject);
     procedure ButtonSelFavoriteClick(Sender: TObject);
     procedure ButtonSelDeleteClick(Sender: TObject);
@@ -150,6 +149,9 @@ type
     procedure CheckBoxKeyboardChange(Sender: TObject);
     procedure LabelActualDateResize(Sender: TObject);
     procedure TimerActivityTimer(Sender: TObject);
+    procedure LayoutCloseAddToFriendsClick(Sender: TObject);
+    procedure ButtonAddToFriendsClick(Sender: TObject);
+    procedure LayoutUnpinMessageClick(Sender: TObject);
   private
     FConversationId: TVkPeerId;
     FVK: TCustomVK;
@@ -185,6 +187,7 @@ type
     FMessages: TMessages;
     FCurrentKeyboard: TFrameKeyboard;
     FIsSending: Boolean;
+    FWasHiddenKeyboard: Boolean;
     procedure SetConversationId(const Value: TVkPeerId);
     procedure ReloadAsync;
     procedure SetVK(const Value: TCustomVK);
@@ -215,7 +218,7 @@ type
     procedure UpdateSelection(const Count: Integer);
     procedure SetHeadMode(const Value: THeadMode);
     procedure UpdateFooterSize;
-    function GetMessageDate(Frame: TFrame): TDateTime;
+    function GetMessageDate(Frame: TFrameMessageBase): TDateTime;
     procedure InsertDateLastMessage(LastDate: TDateTime; MessageId: Extended);
     procedure SetVerified(const Value: Boolean);
     procedure SetIsNeedAddToFriends(const Value: Boolean);
@@ -243,8 +246,7 @@ type
     procedure UpdateReplyAnswerButton(const Count: Integer);
     procedure ForEach(Proc: TForEachMessage);
     procedure SetUserSex(const Value: TVkSex);
-    function GetMessageId(Frame: TFrame): Extended;
-    procedure AddMessageFrame(Frame: TFrame);
+    procedure AddMessageFrame(Frame: TFrameMessageBase);
     procedure UpdateMessageList;
     procedure CreateKeyBoard(Keyboard: TVkKeyboard);
     procedure SetIsSending(const Value: Boolean);
@@ -254,11 +256,17 @@ type
     procedure UpdateActualDate;
     procedure FOnUsersTyping(const Sender: TObject; const M: TMessage);
     procedure ActivityTyping(Data: TChatTypingData);
+    function FindMessage(const MessageId: Int64; var Frame: TFrameMessageBase): Boolean;
+    function ContainsMessage(const MessageId: Int64): Boolean;
+    procedure UpdateMessage(const MessageId: Int64);
+    procedure UpdateMessageData(const MessageId: Int64; ItemData: TVkMessage; ExtData: TVkEntityExtendedList<TVkMessage>);
+    procedure FOnPinnedMessageClick(Sender: TObject);
     property HeadMode: THeadMode read FHeadMode write SetHeadMode;
   protected
+    function GetMessageId(Frame: TFrameMessageBase): Int64;
     procedure SetVisible(const Value: Boolean); override;
-    function GetLastMessage: TFrame;
-    function GetFirstMessage: TFrame;
+    function GetLastMessage: TFrameMessageBase;
+    function GetFirstMessage: TFrameMessageBase;
   public
     constructor Create(AOwner: TComponent; AVK: TCustomVK); reintroduce;
     destructor Destroy; override;
@@ -308,6 +316,7 @@ uses
   ChatFMX.Frame.Attachment.ReplyMessage;
 
 {$R *.fmx}
+
 { TFrameChat }
 
 function TFrameChat.GetSelected: TArray<TFrameMessage>;
@@ -321,6 +330,11 @@ begin
       Inc(Cnt);
     end;
   SetLength(Result, Cnt);
+end;
+
+procedure TFrameChat.ButtonAddToFriendsClick(Sender: TObject);
+begin
+  //
 end;
 
 procedure TFrameChat.ButtonBackClick(Sender: TObject);
@@ -475,6 +489,7 @@ constructor TFrameChat.Create(AOwner: TComponent; AVK: TCustomVK);
 begin
   FMessages := TMessages.Create;
   inherited Create(AOwner);
+  FWasHiddenKeyboard := False;
   FCurrentKeyboard := nil;
   LayoutActualDate.Visible := False;
   RectangleDesign.Visible := False;
@@ -529,6 +544,11 @@ begin
   RoundRectActualDate.Width := LabelActualDate.Width + 30;
 end;
 
+procedure TFrameChat.LayoutCloseAddToFriendsClick(Sender: TObject);
+begin
+  IsNeedAddToFriends := False;
+end;
+
 procedure TFrameChat.LayoutFooterBottomResize(Sender: TObject);
 begin
   UpdateFooterSize;
@@ -546,6 +566,23 @@ begin
   FrameLoadingMesages.Visible :=
     (LayoutMessageList.Height + FrameLoadingMesages.Height > VertScrollBoxMessages.Height) and
     (not FOffsetEnd);
+end;
+
+procedure TFrameChat.LayoutUnpinMessageClick(Sender: TObject);
+begin
+  TTask.Run(
+    procedure
+    begin
+      try
+        VK.Messages.Unpin(ConversationId);
+      except
+        Event.Queue(Self,
+          procedure
+          begin
+            ShowMessage('Не удалось открепить сообщение');
+          end);
+      end;
+    end);
 end;
 
 procedure TFrameChat.LayoutUnselClick(Sender: TObject);
@@ -694,12 +731,53 @@ begin
     end);
 end;
 
+procedure TFrameChat.UpdateMessageData(const MessageId: Int64; ItemData: TVkMessage; ExtData: TVkEntityExtendedList<TVkMessage>);
+begin
+  var Frame: TFrameMessageBase;
+  if FindMessage(MessageId, Frame) and (Frame is TFrameMessage) then
+  begin
+    (Frame as TFrameMessage).Fill(ItemData, ExtData, ChatInfo);
+    (Frame as TFrameMessage).UpdateVisibility;
+  end;
+end;
+
+procedure TFrameChat.UpdateMessage(const MessageId: Int64);
+begin
+  if ContainsMessage(MessageId) then
+    TTask.Run(
+      procedure
+      var
+        Items: TVkMessages;
+        Params: TVkParamsMessageGet;
+      begin
+        Items := nil;
+        Params.MessageId(MessageId);
+        Params.Extended;
+        VK.Messages.GetById(Items, Params);
+        if Assigned(Items) then
+        begin
+          var Ext: IExtended := Items;
+          if Length(Items.Items) > 0 then
+            Event.Queue(Self,
+              procedure
+              var
+                ExtRef: IExtended;
+              begin
+                ExtRef := Ext;
+                UpdateMessageData(MessageId, Items.Items[0], Items);
+                ExtRef := nil;
+              end);
+        end;
+      end);
+end;
+
 procedure TFrameChat.FOnEditMessage(const Sender: TObject; const M: TMessage);
 var
   Event: TEventEditMessage absolute M;
 begin
   if Event.Data.PeerId <> NormalizePeerId(FConversationId) then
     Exit;
+  UpdateMessage(Event.Data.MessageId);
 end;
 
 procedure TFrameChat.ActivityTyping(Data: TChatTypingData);
@@ -785,7 +863,7 @@ begin
     for var Item in Items.Items do
       CreateMessageItem(Item, Items, True);
     if Length(Items.Conversations) > 0 then
-      CreateKeyBoard(Items.Conversations[0].CurrentKeyboard);
+      UpdateInfo(Items.Conversations[0], Data);
   finally
     LayoutMessageList.EndUpdate;
   end;
@@ -813,65 +891,55 @@ begin
   Result.PeerId := ConversationId;
 end;
 
-function TFrameChat.GetFirstMessage: TFrame;
+function TFrameChat.GetFirstMessage: TFrameMessageBase;
 begin
   Result := nil;
   var MsgId: Extended := -1;
   for var Control in LayoutMessageList.Controls do
-    if (Control is TFrameMessage) or (Control is TFrameMessageAction) or (Control is TFrameMessageDate) then
+    if (Control is TFrameMessage) or (Control is TFrameMessageAction) then
     begin
-      var Id := GetMessageId(Control as TFrame);
+      var Id := (Control as TFrameMessageBase).MessageId;
       if (MsgId > Id) or (MsgId = -1) then
       begin
         MsgId := Id;
-        Result := Control as TFrame;
+        Result := Control as TFrameMessageBase;
       end;
     end;
 end;
 
-function TFrameChat.GetLastMessage: TFrame;
+function TFrameChat.GetLastMessage: TFrameMessageBase;
 begin
   Result := nil;
   var MsgId: Extended := -1;
   for var Control in LayoutMessageList.Controls do
-    if (Control is TFrameMessage) or (Control is TFrameMessageAction) or (Control is TFrameMessageDate) then
+    if (Control is TFrameMessage) or (Control is TFrameMessageAction) then
     begin
-      var Id := GetMessageId(Control as TFrame);
+      var Id := (Control as TFrameMessageBase).MessageId;
       if (MsgId < Id) or (MsgId = -1) then
       begin
         MsgId := Id;
-        Result := Control as TFrame;
+        Result := Control as TFrameMessageBase;
       end;
     end;
 end;
 
-function TFrameChat.GetMessageDate(Frame: TFrame): TDateTime;
+function TFrameChat.GetMessageDate(Frame: TFrameMessageBase): TDateTime;
 begin
-  Result := 0;
-  if not Assigned(Frame) then
-    Exit;
-  if Frame is TFrameMessage then
-    Result := (Frame as TFrameMessage).Date
-  else if Frame is TFrameMessageAction then
-    Result := (Frame as TFrameMessageAction).Date
-  else if Frame is TFrameMessageDate then
-    Result := (Frame as TFrameMessageDate).Date;
+  if Assigned(Frame) then
+    Result := Frame.Date
+  else
+    Result := 0;
 end;
 
-function TFrameChat.GetMessageId(Frame: TFrame): Extended;
+function TFrameChat.GetMessageId(Frame: TFrameMessageBase): Int64;
 begin
-  Result := 0;
-  if not Assigned(Frame) then
-    Exit;
-  if Frame is TFrameMessage then
-    Result := (Frame as TFrameMessage).MessageId
-  else if Frame is TFrameMessageAction then
-    Result := (Frame as TFrameMessageAction).MessageId
-  else if Frame is TFrameMessageDate then
-    Result := (Frame as TFrameMessageDate).MessageId;
+  if Assigned(Frame) then
+    Result := Frame.MessageId
+  else
+    Result := 0;
 end;
 
-procedure TFrameChat.AddMessageFrame(Frame: TFrame);
+procedure TFrameChat.AddMessageFrame(Frame: TFrameMessageBase);
 begin
   FMessages.Add(TMessageFrame.Create(Frame.TagFloat, Frame));
 end;
@@ -880,7 +948,7 @@ procedure TFrameChat.InsertDateLastMessage(LastDate: TDateTime; MessageId: Exten
 begin
   if LastDate > 0 then
   begin
-    var Frame := TFrameMessageDate.Create(LayoutMessageList);
+    var Frame := TFrameMessageDate.Create(LayoutMessageList, VK);
     LayoutMessageList.AddObject(Frame);
     Frame.Fill(LastDate, MessageId);
     Frame.Align := TAlignLayout.Horizontal;
@@ -888,9 +956,28 @@ begin
   end;
 end;
 
+function TFrameChat.FindMessage(const MessageId: Int64; var Frame: TFrameMessageBase): Boolean;
+begin
+  for var Item in FMessages do
+    if Item.Id = MessageId then
+    begin
+      Frame := Item.Frame;
+      Exit(True);
+    end;
+  Result := False;
+end;
+
+function TFrameChat.ContainsMessage(const MessageId: Int64): Boolean;
+begin
+  var Find: TFrameMessageBase;
+  Result := FindMessage(MessageId, Find);
+end;
+
 procedure TFrameChat.CreateMessageItem(const Item: TVkMessage; AData: TVkEntityExtendedList<TVkMessage>; IsNew: Boolean);
 begin
   if not Assigned(Item) then
+    Exit;
+  if ContainsMessage(Item.Id) then
     Exit;
   if not IsNew then
   begin
@@ -930,6 +1017,29 @@ begin
   var NewPos := TPointF.Create(VertScrollBoxMessages.ViewportPosition.X, 0);
   NewPos.Y := Frame.Position.Y + LayoutMessageList.Position.Y - 60;
   VertScrollBoxMessages.ViewportPosition := NewPos;
+end;
+
+procedure TFrameChat.FOnPinnedMessageClick(Sender: TObject);
+var
+  Frame: TFrameAttachmentPinnedMessage absolute Sender;
+begin
+  var MessageId := Frame.MessageId;
+  var JumpTo: TFrameMessage := nil;
+  ForEach(
+    procedure(Item: TFrameMessage; var Break: Boolean)
+    begin
+      if Item.MessageId = MessageId then
+      begin
+        JumpTo := Item;
+        Break := True;
+      end;
+    end);
+  if Assigned(JumpTo) then
+  begin
+    if not JumpTo.Visibility then
+      ScrollTo(JumpTo);
+    JumpTo.Flash;
+  end;
 end;
 
 procedure TFrameChat.FOnReplyMessageClick(Sender: TObject);
@@ -1066,7 +1176,7 @@ begin
   FPinnedMessageId := Item.Id;
   FPinnedMessage := TFrameAttachmentPinnedMessage.Create
     (LayoutPinnedMessageClient, FVK);
-  // FPinnedMessage.OnClick := FOnPinnedClick;
+  FPinnedMessage.OnClick := FOnPinnedMessageClick;
   FPinnedMessage.Parent := LayoutPinnedMessageClient;
   FPinnedMessage.Align := TAlignLayout.Client;
   FPinnedMessage.Fill(Item, Data);
@@ -1189,7 +1299,7 @@ begin
     LayoutFooterKeyboard.Height := FCurrentKeyboard.Height;
     FCurrentKeyboard.Align := TAlignLayout.Client;
   end;
-  LayoutFooterKeyboard.Visible := Assigned(FCurrentKeyboard);
+  LayoutFooterKeyboard.Visible := Assigned(FCurrentKeyboard) and not FWasHiddenKeyboard;
   UpdateFooterSize;
 end;
 
@@ -1250,7 +1360,7 @@ begin
     for var Control in LayoutMessageList.Controls do
       if Control is TFrameMessage then
       begin
-        var Vis :=((Control.BoundsRect.Bottom > ATop) and
+        var Vis := ((Control.BoundsRect.Bottom > ATop) and
           (Control.BoundsRect.Top < ABottom)) or
           ((Control.BoundsRect.Top < ABottom) and
           (Control.BoundsRect.Bottom > ATop));
@@ -1258,7 +1368,7 @@ begin
       end
       else if Control is TFrameMessageDate then
       begin
-        var Vis :=((Control.BoundsRect.Top >= ATop) and
+        var Vis := ((Control.BoundsRect.Top >= ATop) and
           (Control.BoundsRect.Bottom <= ABottom));
         (Control as TFrameMessageDate).Visibility := Vis;
       end;
@@ -1276,10 +1386,15 @@ begin
   if Assigned(FCurrentKeyboard) then
   begin
     LayoutFooterKeyboard.Visible := CheckBoxKeyboard.IsChecked;
+    if not CheckBoxKeyboard.IsChecked then
+      FWasHiddenKeyboard := True;
     UpdateFooterSize;
   end
   else
+  begin
     CheckBoxKeyboard.Visible := False;
+    FWasHiddenKeyboard := True;
+  end;
 end;
 
 procedure TFrameChat.CircleToDownClick(Sender: TObject);
@@ -1314,13 +1429,13 @@ begin
   for var Item in FMessages do
     if (LDate = 0) and (Item.Frame is TFrameMessageDate) then
     begin
-      var Frame :=(Item.Frame as TFrameMessageDate);
+      var Frame := (Item.Frame as TFrameMessageDate);
       if Frame.Visibility then
         LDate := Frame.Date;
     end
     else if Item.Frame is TFrameMessage then
     begin
-      var Frame :=(Item.Frame as TFrameMessage);
+      var Frame := (Item.Frame as TFrameMessage);
       if Frame.Visibility then
       begin
         LabelActualDate.Text := HumanDateTime(Frame.Date);
@@ -1409,28 +1524,6 @@ begin
     Key := 0;
     Event.Queue(Self, SendMessage);
   end;
-end;
-
-procedure TFrameChat.PathCloseAddToFriendsClick(Sender: TObject);
-begin
-  IsNeedAddToFriends := False;
-end;
-
-procedure TFrameChat.PathUnpinMessageClick(Sender: TObject);
-begin
-  TTask.Run(
-    procedure
-    begin
-      try
-        VK.Messages.Unpin(ConversationId);
-      except
-        Event.Queue(Self,
-          procedure
-          begin
-            ShowMessage('Не удалось открепить сообщение');
-          end);
-      end;
-    end);
 end;
 
 procedure TFrameChat.UpdateFooterSize;
@@ -1737,7 +1830,7 @@ end;
 
 { TMessageFrame }
 
-class function TMessageFrame.Create(Id: Extended; Frame: TFrame): TMessageFrame;
+class function TMessageFrame.Create(Id: Extended; Frame: TFrameMessageBase): TMessageFrame;
 begin
   Result.Id := Id;
   Result.Frame := Frame;

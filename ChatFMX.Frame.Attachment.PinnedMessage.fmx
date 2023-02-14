@@ -1,7 +1,5 @@
 inherited FrameAttachmentPinnedMessage: TFrameAttachmentPinnedMessage
   HitTest = True
-  Margins.Top = 5.000000000000000000
-  Margins.Bottom = 7.000000000000000000
   Size.Width = 438.000000000000000000
   Size.Height = 35.000000000000000000
   OnClick = FrameClick
@@ -20,7 +18,7 @@ inherited FrameAttachmentPinnedMessage: TFrameAttachmentPinnedMessage
       object LabelText: TLabel
         Align = Top
         StyledSettings = [Style]
-        Position.Y = 17.000000000000000000
+        Position.Y = 18.000000000000000000
         Size.Width = 438.000000000000000000
         Size.Height = 17.000000000000000000
         Size.PlatformDefault = False
@@ -33,6 +31,7 @@ inherited FrameAttachmentPinnedMessage: TFrameAttachmentPinnedMessage
       end
       object LayoutFrom: TLayout
         Align = MostTop
+        Margins.Bottom = 1.000000000000000000
         Size.Width = 438.000000000000000000
         Size.Height = 17.000000000000000000
         Size.PlatformDefault = False

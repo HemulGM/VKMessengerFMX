@@ -11,7 +11,7 @@ uses
   VK.Entity.Conversation, System.Messaging, VK.Types,
   System.Generics.Collections, FMX.Memo.Types, FMX.ScrollBox, FMX.Memo,
   ChatFMX.Frame.Loading, VK.UserEvents, VK.Entity.Common.ExtendedList,
-  System.Sensors, ChatFMX.View.ChatItem;
+  System.Sensors, ChatFMX.View.ChatItem, System.Json;
 
 type
   TChats = class(TObjectList<TFrameChat>)
@@ -79,6 +79,7 @@ type
     Rectangle1: TRectangle;
     Label1: TLabel;
     ButtonLogin: TButton;
+    LayoutHeadContent: TLayout;
     procedure FormResize(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure VKAuth(Sender: TObject; Url: string; var Token: string; var TokenExpiry: Int64; var ChangePasswordHash: string);
@@ -106,6 +107,7 @@ type
     procedure UserEventsChangeConversationMinorId(Sender: TObject; PeerId: TVkPeerId; const NewId: Int64);
     procedure UserEventsUsersTyping(Sender: TObject; Data: TChatTypingData);
     procedure UserEventsUserTyping(Sender: TObject; UserId: TVkPeerId; ChatId: Int64);
+    procedure UserEventsUnhandledEvents(Sender: TObject; const JSON: TJSONValue);
   private
     FToken: string;
     FChangePasswordHash: string;
@@ -306,6 +308,7 @@ end;
 procedure TFormMain.FormResize(Sender: TObject);
 begin
   LayoutClient.Width := Max(Min(1000, ClientWidth), 800) - 40;
+  LayoutHeadContent.Width := Min(1000, ClientWidth) - 40;
 end;
 
 procedure TFormMain.FOnChatChangeSort(Sender: TObject);
@@ -475,6 +478,16 @@ end;
 procedure TFormMain.UserEventsRecoverMessages(Sender: TObject; PeerId: TVkPeerId; LocalId: Int64);
 begin
   Event.Send(TEventRecoverMessage.Create(PeerId, LocalId));
+end;
+
+procedure TFormMain.UserEventsUnhandledEvents(Sender: TObject; const JSON: TJSONValue);
+begin
+  var JS := JSON.Format;
+  TThread.Queue(nil,
+    procedure
+    begin
+      ShowMessage('Unhandled event: '#13#10 + JS);
+    end);
 end;
 
 procedure TFormMain.UserEventsUserOffline(Sender: TObject; UserId: TVkPeerId; InactiveUser: Boolean; TimeStamp: TDateTime);

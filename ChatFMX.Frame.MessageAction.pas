@@ -7,26 +7,19 @@ uses
   FMX.Types, FMX.Graphics, FMX.Controls, FMX.Forms, FMX.Dialogs, FMX.StdCtrls,
   FMX.Objects, FMX.Controls.Presentation, VK.Entity.Message, VK.API,
   VK.Entity.Conversation, VK.Entity.Common.ExtendedList, ChatFMX.Frame.Chat,
-  ChatFMX.Classes;
+  ChatFMX.Classes, ChatFMX.Frame.Message.Base;
 
 type
-  TFrameMessageAction = class(TFrame)
+  TFrameMessageAction = class(TFrameMessageBase)
     LabelText: TLabel;
     procedure LabelTextResize(Sender: TObject);
   private
-    FVK: TCustomVK;
     FText: string;
     FFromText, FMemberText: string;
-    FDate: TDateTime;
-    FMessageId: Int64;
     procedure SetText(const Value: string);
-    procedure SetDate(const Value: TDateTime);
   public
-    constructor Create(AOwner: TComponent; AVK: TCustomVK); reintroduce;
     procedure Fill(Item: TVkMessage; Data: TVkEntityExtendedList<TVkMessage>; ChatInfo: TChatInfo);
     property Text: string read FText write SetText;
-    property Date: TDateTime read FDate write SetDate;
-    property MessageId: Int64 read FMessageId;
   end;
 
 implementation
@@ -36,17 +29,10 @@ uses
 
 {$R *.fmx}
 
-constructor TFrameMessageAction.Create(AOwner: TComponent; AVK: TCustomVK);
-begin
-  inherited Create(AOwner);
-  FVK := AVK;
-  Name := '';
-end;
-
 procedure TFrameMessageAction.Fill(Item: TVkMessage; Data: TVkEntityExtendedList<TVkMessage>; ChatInfo: TChatInfo);
 begin
-  FMessageId := Item.Id;
-  TagFloat := FMessageId;
+  MessageId := Item.Id;
+  TagFloat := MessageId;
   FFromText := 'Кто-то';
   FMemberText := '';
   var P2P := ChatInfo.IsP2P;
@@ -96,11 +82,6 @@ end;
 procedure TFrameMessageAction.LabelTextResize(Sender: TObject);
 begin
   Height := LabelText.Height + Padding.Top + Padding.Bottom;
-end;
-
-procedure TFrameMessageAction.SetDate(const Value: TDateTime);
-begin
-  FDate := Value;
 end;
 
 procedure TFrameMessageAction.SetText(const Value: string);

@@ -49,7 +49,8 @@ uses
   ChatFMX.Frame.Attachment.PinnedMessage in 'ChatFMX.Frame.Attachment.PinnedMessage.pas' {FrameAttachmentPinnedMessage},
   ChatFMX.Classes in 'ChatFMX.Classes.pas',
   ChatFMX.Frame.Attachment.Story in 'ChatFMX.Frame.Attachment.Story.pas' {FrameAttachmentStory},
-  ChatFMX.Frame.Keyboard in 'ChatFMX.Frame.Keyboard.pas' {FrameKeyboard: TFrame};
+  ChatFMX.Frame.Keyboard in 'ChatFMX.Frame.Keyboard.pas' {FrameKeyboard: TFrame},
+  ChatFMX.Frame.Message.Base in 'ChatFMX.Frame.Message.Base.pas' {FrameMessageBase: TFrame};
 
 {$R *.res}
 

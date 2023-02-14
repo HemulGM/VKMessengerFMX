@@ -26,7 +26,7 @@ object FrameChat: TFrameChat
       Fill.Kind = None
       Sides = [Bottom]
       Size.Width = 724.000000000000000000
-      Size.Height = 48.000000000000000000
+      Size.Height = 50.000000000000000000
       Size.PlatformDefault = False
       Stroke.Color = xFF424242
       XRadius = 12.000000000000000000
@@ -34,16 +34,16 @@ object FrameChat: TFrameChat
       object LayoutHead: TLayout
         Align = Client
         Padding.Left = 20.000000000000000000
-        Padding.Right = 12.000000000000000000
         Size.Width = 724.000000000000000000
-        Size.Height = 48.000000000000000000
+        Size.Height = 50.000000000000000000
         Size.PlatformDefault = False
         TabOrder = 0
         object LayoutHeadNormal: TLayout
           Align = Client
           Locked = True
-          Size.Width = 656.000000000000000000
-          Size.Height = 48.000000000000000000
+          Margins.Right = 20.000000000000000000
+          Size.Width = 648.000000000000000000
+          Size.Height = 50.000000000000000000
           Size.PlatformDefault = False
           TabOrder = 3
           object ButtonActions: TButton
@@ -51,9 +51,9 @@ object FrameChat: TFrameChat
             Cursor = crHandPoint
             Images = DataModuleRes.ImageListSVG
             ImageIndex = 5
-            Position.X = 580.000000000000000000
+            Position.X = 572.000000000000000000
             Size.Width = 36.000000000000000000
-            Size.Height = 48.000000000000000000
+            Size.Height = 50.000000000000000000
             Size.PlatformDefault = False
             StyleLookup = 'button_small'
             TabOrder = 2
@@ -64,9 +64,9 @@ object FrameChat: TFrameChat
             Cursor = crHandPoint
             Images = DataModuleRes.ImageListSVG
             ImageIndex = 4
-            Position.X = 508.000000000000000000
+            Position.X = 500.000000000000000000
             Size.Width = 36.000000000000000000
-            Size.Height = 48.000000000000000000
+            Size.Height = 50.000000000000000000
             Size.PlatformDefault = False
             StyleLookup = 'button_small'
             TabOrder = 4
@@ -77,9 +77,9 @@ object FrameChat: TFrameChat
             Cursor = crHandPoint
             Images = DataModuleRes.ImageListSVG
             ImageIndex = 3
-            Position.X = 544.000000000000000000
+            Position.X = 536.000000000000000000
             Size.Width = 36.000000000000000000
-            Size.Height = 48.000000000000000000
+            Size.Height = 50.000000000000000000
             Size.PlatformDefault = False
             StyleLookup = 'button_small'
             TabOrder = 3
@@ -91,10 +91,10 @@ object FrameChat: TFrameChat
             Margins.Left = 10.000000000000000000
             Margins.Top = 9.000000000000000000
             Margins.Bottom = 9.000000000000000000
-            Position.X = 626.000000000000000000
+            Position.X = 618.000000000000000000
             Position.Y = 9.000000000000000000
             Size.Width = 30.000000000000000000
-            Size.Height = 30.000000000000000000
+            Size.Height = 32.000000000000000000
             Size.PlatformDefault = False
             Stroke.Kind = None
           end
@@ -106,7 +106,7 @@ object FrameChat: TFrameChat
             Margins.Right = 5.000000000000000000
             Position.X = 89.000000000000000000
             Size.Width = 89.000000000000000000
-            Size.Height = 48.000000000000000000
+            Size.Height = 50.000000000000000000
             Size.PlatformDefault = False
             TextSettings.Font.Family = 'Roboto'
             TextSettings.Font.Size = 13.000000000000000000
@@ -121,7 +121,7 @@ object FrameChat: TFrameChat
             StyledSettings = []
             Margins.Right = 5.000000000000000000
             Size.Width = 63.000000000000000000
-            Size.Height = 48.000000000000000000
+            Size.Height = 50.000000000000000000
             Size.PlatformDefault = False
             TextSettings.Font.Family = 'Roboto'
             TextSettings.Font.Size = 14.000000000000000000
@@ -135,7 +135,7 @@ object FrameChat: TFrameChat
             Align = Left
             Position.X = 183.000000000000000000
             Size.Width = 16.000000000000000000
-            Size.Height = 48.000000000000000000
+            Size.Height = 50.000000000000000000
             Size.PlatformDefault = False
             TabOrder = 6
             object ImageMobileOnline: TImage
@@ -156,7 +156,7 @@ object FrameChat: TFrameChat
                 end>
               Align = Client
               Size.Width = 16.000000000000000000
-              Size.Height = 48.000000000000000000
+              Size.Height = 50.000000000000000000
               Size.PlatformDefault = False
               WrapMode = Center
             end
@@ -165,7 +165,7 @@ object FrameChat: TFrameChat
             Align = Left
             Position.X = 199.000000000000000000
             Size.Width = 16.000000000000000000
-            Size.Height = 48.000000000000000000
+            Size.Height = 50.000000000000000000
             Size.PlatformDefault = False
             TabOrder = 9
             object Path1: TPath
@@ -201,7 +201,7 @@ object FrameChat: TFrameChat
             Margins.Left = 1.000000000000000000
             Position.X = 69.000000000000000000
             Size.Width = 16.000000000000000000
-            Size.Height = 48.000000000000000000
+            Size.Height = 50.000000000000000000
             Size.PlatformDefault = False
             TabOrder = 8
             object PathVer: TPath
@@ -222,7 +222,7 @@ object FrameChat: TFrameChat
               Margins.Right = 4.000000000000000000
               Position.X = 3.000000000000000000
               Size.Width = 9.000000000000000000
-              Size.Height = 48.000000000000000000
+              Size.Height = 50.000000000000000000
               Size.PlatformDefault = False
               Stroke.Kind = None
               WrapMode = Fit
@@ -231,8 +231,9 @@ object FrameChat: TFrameChat
         end
         object LayoutSelection: TLayout
           Align = Client
-          Size.Width = 618.000000000000000000
-          Size.Height = 48.000000000000000000
+          Margins.Right = 12.000000000000000000
+          Size.Width = 656.000000000000000000
+          Size.Height = 50.000000000000000000
           Size.PlatformDefault = False
           Visible = False
           TabOrder = 2
@@ -241,9 +242,9 @@ object FrameChat: TFrameChat
             Cursor = crHandPoint
             Images = DataModuleRes.ImageListSVG
             ImageIndex = 11
-            Position.X = 402.000000000000000000
+            Position.X = 440.000000000000000000
             Size.Width = 36.000000000000000000
-            Size.Height = 48.000000000000000000
+            Size.Height = 50.000000000000000000
             Size.PlatformDefault = False
             StyleLookup = 'button_small'
             TabOrder = 0
@@ -255,9 +256,9 @@ object FrameChat: TFrameChat
             Cursor = crHandPoint
             Images = DataModuleRes.ImageListSVG
             ImageIndex = 9
-            Position.X = 330.000000000000000000
+            Position.X = 368.000000000000000000
             Size.Width = 36.000000000000000000
-            Size.Height = 48.000000000000000000
+            Size.Height = 50.000000000000000000
             Size.PlatformDefault = False
             StyleLookup = 'button_small'
             TabOrder = 3
@@ -270,9 +271,9 @@ object FrameChat: TFrameChat
             Hint = #1059#1076#1072#1083#1080#1090#1100
             Images = DataModuleRes.ImageListSVG
             ImageIndex = 10
-            Position.X = 366.000000000000000000
+            Position.X = 404.000000000000000000
             Size.Width = 36.000000000000000000
-            Size.Height = 48.000000000000000000
+            Size.Height = 50.000000000000000000
             Size.PlatformDefault = False
             StyleLookup = 'button_small'
             TabOrder = 1
@@ -285,7 +286,7 @@ object FrameChat: TFrameChat
             Cursor = crHandPoint
             HitTest = True
             Size.Width = 233.000000000000000000
-            Size.Height = 48.000000000000000000
+            Size.Height = 50.000000000000000000
             Size.PlatformDefault = False
             TabOrder = 4
             OnClick = LayoutUnselClick
@@ -295,7 +296,7 @@ object FrameChat: TFrameChat
               StyledSettings = []
               Margins.Right = 5.000000000000000000
               Size.Width = 80.000000000000000000
-              Size.Height = 48.000000000000000000
+              Size.Height = 50.000000000000000000
               Size.PlatformDefault = False
               TextSettings.Font.Family = 'Roboto'
               TextSettings.Font.Size = 13.000000000000000000
@@ -309,7 +310,7 @@ object FrameChat: TFrameChat
               Align = Left
               Position.X = 85.000000000000000000
               Size.Width = 16.000000000000000000
-              Size.Height = 48.000000000000000000
+              Size.Height = 50.000000000000000000
               Size.PlatformDefault = False
               TabOrder = 8
               object Path2: TPath
@@ -346,10 +347,10 @@ object FrameChat: TFrameChat
             Margins.Left = 10.000000000000000000
             Margins.Top = 10.000000000000000000
             Margins.Bottom = 10.000000000000000000
-            Position.X = 448.000000000000000000
+            Position.X = 486.000000000000000000
             Position.Y = 10.000000000000000000
             Size.Width = 80.000000000000000000
-            Size.Height = 28.000000000000000000
+            Size.Height = 30.000000000000000000
             Size.PlatformDefault = False
             StyleLookup = 'button_simple'
             TabOrder = 8
@@ -364,10 +365,10 @@ object FrameChat: TFrameChat
             Margins.Left = 10.000000000000000000
             Margins.Top = 10.000000000000000000
             Margins.Bottom = 10.000000000000000000
-            Position.X = 538.000000000000000000
+            Position.X = 576.000000000000000000
             Position.Y = 10.000000000000000000
             Size.Width = 80.000000000000000000
-            Size.Height = 28.000000000000000000
+            Size.Height = 30.000000000000000000
             Size.PlatformDefault = False
             StyleLookup = 'button_simple'
             TabOrder = 7
@@ -381,9 +382,9 @@ object FrameChat: TFrameChat
             Cursor = crHandPoint
             Images = DataModuleRes.ImageListSVG
             ImageIndex = 20
-            Position.X = 294.000000000000000000
+            Position.X = 332.000000000000000000
             Size.Width = 36.000000000000000000
-            Size.Height = 48.000000000000000000
+            Size.Height = 50.000000000000000000
             Size.PlatformDefault = False
             StyleLookup = 'button_small'
             TabOrder = 2
@@ -398,7 +399,7 @@ object FrameChat: TFrameChat
           ImageIndex = 13
           Position.X = 20.000000000000000000
           Size.Width = 36.000000000000000000
-          Size.Height = 48.000000000000000000
+          Size.Height = 50.000000000000000000
           Size.PlatformDefault = False
           StyleLookup = 'button_small'
           TabOrder = 4
@@ -637,37 +638,37 @@ object FrameChat: TFrameChat
       Fill.Kind = None
       Margins.Right = 1.000000000000000000
       Size.Width = 723.000000000000000000
-      Size.Height = 475.000000000000000000
+      Size.Height = 472.000000000000000000
       Size.PlatformDefault = False
       Stroke.Kind = None
       object VertScrollBoxMessages: TVertScrollBox
         Align = Contents
         Size.Width = 723.000000000000000000
-        Size.Height = 475.000000000000000000
+        Size.Height = 472.000000000000000000
         Size.PlatformDefault = False
         TabOrder = 0
         OnResize = VertScrollBoxMessagesResize
         OnResized = VertScrollBoxMessagesResize
         OnViewportPositionChange = VertScrollBoxMessagesViewportPositionChange
         Viewport.Width = 723.000000000000000000
-        Viewport.Height = 475.000000000000000000
+        Viewport.Height = 472.000000000000000000
         object LayoutMessageList: TLayout
-          Position.Y = 40.000000000000000000
-          Size.Width = 641.000000000000000000
-          Size.Height = 289.000000000000000000
+          Position.Y = 65.000000000000000000
+          Size.Width = 649.000000000000000000
+          Size.Height = 321.000000000000000000
           Size.PlatformDefault = False
           TabOrder = 41
           OnResize = LayoutMessageListResize
           object LayoutActivity: TLayout
             Align = MostBottom
-            Position.Y = 255.000000000000000000
-            Size.Width = 641.000000000000000000
+            Position.Y = 287.000000000000000000
+            Size.Width = 649.000000000000000000
             Size.Height = 34.000000000000000000
             Size.PlatformDefault = False
             TabOrder = 41
             object LayoutActivityContent: TLayout
               Align = Client
-              Size.Width = 641.000000000000000000
+              Size.Width = 649.000000000000000000
               Size.Height = 34.000000000000000000
               Size.PlatformDefault = False
               TabOrder = 0
@@ -708,7 +709,7 @@ object FrameChat: TFrameChat
               object LabelActivity: TLabel
                 Align = Client
                 StyledSettings = [Style]
-                Size.Width = 555.000000000000000000
+                Size.Width = 563.000000000000000000
                 Size.Height = 34.000000000000000000
                 Size.PlatformDefault = False
                 TextSettings.Font.Family = 'Roboto'
@@ -721,7 +722,7 @@ object FrameChat: TFrameChat
           end
           object LayoutLoading: TLayout
             Align = MostTop
-            Size.Width = 641.000000000000000000
+            Size.Width = 649.000000000000000000
             Size.Height = 34.000000000000000000
             Size.PlatformDefault = False
             TabOrder = 40
@@ -729,13 +730,13 @@ object FrameChat: TFrameChat
               Align = Client
               Locked = True
               HitTest = False
-              Size.Width = 641.000000000000000000
+              Size.Width = 649.000000000000000000
               Size.Height = 34.000000000000000000
               Size.PlatformDefault = False
               inherited LayoutAni: TLayout
                 Align = Client
                 Locked = True
-                Size.Width = 641.000000000000000000
+                Size.Width = 649.000000000000000000
                 Size.Height = 34.000000000000000000
                 inherited Circle2: TCircle
                   Locked = True
@@ -792,7 +793,7 @@ object FrameChat: TFrameChat
       object LayoutBottomHints: TLayout
         Align = Bottom
         Margins.Bottom = 12.000000000000000000
-        Position.Y = 413.000000000000000000
+        Position.Y = 410.000000000000000000
         Size.Width = 723.000000000000000000
         Size.Height = 50.000000000000000000
         Size.PlatformDefault = False
@@ -884,28 +885,30 @@ object FrameChat: TFrameChat
       Align = Top
       Corners = []
       Fill.Kind = None
+      Padding.Left = 22.000000000000000000
+      Padding.Right = 15.000000000000000000
       Margins.Right = 1.000000000000000000
-      Position.Y = 48.000000000000000000
+      Position.Y = 50.000000000000000000
       Sides = [Bottom]
       Size.Width = 723.000000000000000000
-      Size.Height = 52.000000000000000000
+      Size.Height = 53.000000000000000000
       Size.PlatformDefault = False
       Stroke.Color = xFF424242
       XRadius = 12.000000000000000000
       YRadius = 12.000000000000000000
       object LayoutAddToFriends: TLayout
         Align = Client
-        Padding.Left = 20.000000000000000000
-        Padding.Right = 15.000000000000000000
-        Size.Width = 723.000000000000000000
-        Size.Height = 52.000000000000000000
+        Locked = True
+        Size.Width = 686.000000000000000000
+        Size.Height = 53.000000000000000000
         Size.PlatformDefault = False
         TabOrder = 0
         object LabelAddFriendHint: TLabel
           Align = Client
           StyledSettings = [Style]
-          Size.Width = 503.000000000000000000
-          Size.Height = 52.000000000000000000
+          Locked = True
+          Size.Width = 495.000000000000000000
+          Size.Height = 53.000000000000000000
           Size.PlatformDefault = False
           TextSettings.Font.Family = 'Roboto'
           TextSettings.Font.Size = 13.000000000000000000
@@ -913,38 +916,43 @@ object FrameChat: TFrameChat
           Text = #1044#1086#1073#1072#1074#1100#1090#1077' '#1070#1079#1077#1088#1072' '#1074' '#1076#1088#1091#1079#1100#1103' '#1080' '#1086#1073#1097#1072#1081#1090#1077#1089#1100' '#1095#1072#1097#1077
           TabOrder = 2
         end
-        object Button1: TButton
+        object ButtonAddToFriends: TButton
           Tag = 15
           Align = MostRight
-          StyledSettings = [Family, FontColor]
-          Margins.Left = 10.000000000000000000
+          StyledSettings = [Family]
+          Margins.Left = 8.000000000000000000
           Margins.Top = 13.000000000000000000
           Margins.Bottom = 13.000000000000000000
-          Position.X = 533.000000000000000000
+          Position.X = 503.000000000000000000
           Position.Y = 13.000000000000000000
           Size.Width = 143.000000000000000000
-          Size.Height = 26.000000000000000000
+          Size.Height = 27.000000000000000000
           Size.PlatformDefault = False
           StyleLookup = 'button_simple'
           TabOrder = 6
           Text = #1044#1086#1073#1072#1074#1080#1090#1100' '#1074' '#1076#1088#1091#1079#1100#1103
           TextSettings.Font.Family = 'Roboto'
           TextSettings.Font.Size = 12.500000000000000000
-          TextSettings.FontColor = xFF222222
+          TextSettings.FontColor = xC8222222
+          OnClick = ButtonAddToFriendsClick
         end
-        object Layout16: TLayout
+        object LayoutCloseAddToFriends: TLayout
           Align = MostRight
-          Locked = True
+          Cursor = crHandPoint
+          HitTest = True
           Margins.Left = 8.000000000000000000
+          Margins.Top = 12.000000000000000000
           Margins.Right = 8.000000000000000000
-          Position.X = 684.000000000000000000
-          Size.Width = 16.000000000000000000
-          Size.Height = 52.000000000000000000
+          Margins.Bottom = 12.000000000000000000
+          Position.X = 654.000000000000000000
+          Position.Y = 12.000000000000000000
+          Size.Width = 24.000000000000000000
+          Size.Height = 29.000000000000000000
           Size.PlatformDefault = False
           TabOrder = 8
+          OnClick = LayoutCloseAddToFriendsClick
           object PathCloseAddToFriends: TPath
             Align = Center
-            Cursor = crHandPoint
             Data.Path = {
               2700000000000000CDCCCC400000A0400100000033331B419A99D93F02000000
               999921416766A63F02000000999921413433333F0200000033331B419C99993E
@@ -964,6 +972,7 @@ object FrameChat: TFrameChat
             Fill.Color = xFF828282
             Locked = True
             Hint = #1057#1082#1088#1099#1090#1100
+            HitTest = False
             Size.Width = 10.000000000000000000
             Size.Height = 10.000000000000000000
             Size.PlatformDefault = False
@@ -971,7 +980,6 @@ object FrameChat: TFrameChat
             WrapMode = Fit
             ParentShowHint = False
             ShowHint = True
-            OnClick = PathCloseAddToFriendsClick
           end
         end
       end
@@ -1027,8 +1035,12 @@ object FrameChat: TFrameChat
       Align = Top
       Corners = []
       Fill.Kind = None
+      Padding.Left = 24.000000000000000000
+      Padding.Top = 8.000000000000000000
+      Padding.Right = 17.000000000000000000
+      Padding.Bottom = 8.000000000000000000
       Margins.Right = 1.000000000000000000
-      Position.Y = 100.000000000000000000
+      Position.Y = 103.000000000000000000
       Sides = [Bottom]
       Size.Width = 723.000000000000000000
       Size.Height = 52.000000000000000000
@@ -1038,25 +1050,27 @@ object FrameChat: TFrameChat
       YRadius = 12.000000000000000000
       object LayoutPinnedMessageClient: TLayout
         Align = Client
-        Padding.Left = 20.000000000000000000
-        Padding.Right = 15.000000000000000000
-        Size.Width = 723.000000000000000000
-        Size.Height = 52.000000000000000000
+        Size.Width = 682.000000000000000000
+        Size.Height = 36.000000000000000000
         Size.PlatformDefault = False
         TabOrder = 0
-        object Layout2: TLayout
+        object LayoutUnpinMessage: TLayout
           Align = MostRight
-          Locked = True
-          Margins.Left = 8.000000000000000000
-          Margins.Right = 8.000000000000000000
-          Position.X = 684.000000000000000000
-          Size.Width = 16.000000000000000000
-          Size.Height = 52.000000000000000000
+          Cursor = crHandPoint
+          HitTest = True
+          Margins.Left = 6.000000000000000000
+          Margins.Top = 6.000000000000000000
+          Margins.Right = 6.000000000000000000
+          Margins.Bottom = 6.000000000000000000
+          Position.X = 652.000000000000000000
+          Position.Y = 6.000000000000000000
+          Size.Width = 24.000000000000000000
+          Size.Height = 24.000000000000000000
           Size.PlatformDefault = False
           TabOrder = 7
+          OnClick = LayoutUnpinMessageClick
           object PathUnpinMessage: TPath
             Align = Center
-            Cursor = crHandPoint
             Data.Path = {
               2700000000000000CDCCCC400000A0400100000033331B419A99D93F02000000
               999921416766A63F02000000999921413433333F0200000033331B419C99993E
@@ -1076,6 +1090,7 @@ object FrameChat: TFrameChat
             Fill.Color = xFF828282
             Locked = True
             Hint = #1054#1090#1082#1088#1077#1087#1080#1090#1100
+            HitTest = False
             Size.Width = 10.000000000000000000
             Size.Height = 10.000000000000000000
             Size.PlatformDefault = False
@@ -1083,17 +1098,14 @@ object FrameChat: TFrameChat
             WrapMode = Fit
             ParentShowHint = False
             ShowHint = True
-            OnClick = PathUnpinMessageClick
           end
         end
         object Layout6: TLayout
           Align = Left
           Locked = True
-          Margins.Left = 4.000000000000000000
           Margins.Right = 8.000000000000000000
-          Position.X = 24.000000000000000000
-          Size.Width = 16.000000000000000000
-          Size.Height = 52.000000000000000000
+          Size.Width = 12.000000000000000000
+          Size.Height = 36.000000000000000000
           Size.PlatformDefault = False
           TabOrder = 6
           object Path5: TPath
@@ -1135,7 +1147,7 @@ object FrameChat: TFrameChat
     Enabled = False
     Interval = 5000
     OnTimer = TimerActivityTimer
-    Left = 440
-    Top = 725
+    Left = 304
+    Top = 333
   end
 end

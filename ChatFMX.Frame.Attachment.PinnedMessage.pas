@@ -24,11 +24,13 @@ type
     FOnSelect: TNotifyEvent;
     FFrom: string;
     FDate: TDateTime;
+    FMessageId: Int64;
     procedure SetText(const Value: string);
     procedure SetIsAttachmentText(const Value: Boolean);
     procedure SetOnSelect(const Value: TNotifyEvent);
     procedure SetFrom(const Value: string);
     procedure SetDate(const Value: TDateTime);
+    procedure SetMessageId(const Value: Int64);
   public
     constructor Create(AOwner: TComponent; AVK: TCustomVK); override;
     destructor Destroy; override;
@@ -38,6 +40,7 @@ type
     property Date: TDateTime read FDate write SetDate;
     property IsAttachmentText: Boolean read FIsAttachmentText write SetIsAttachmentText;
     property OnSelect: TNotifyEvent read FOnSelect write SetOnSelect;
+    property MessageId: Int64 read FMessageId write SetMessageId;
   end;
 
 implementation
@@ -60,6 +63,7 @@ end;
 
 procedure TFrameAttachmentPinnedMessage.Fill(Item: TVkMessage; Data: IExtended);
 begin
+  FMessageId := Item.Id;
   Text := ParseMention(PrepareForPreview(Item.Text));
   From := '';
   IsAttachmentText := False;
@@ -113,6 +117,11 @@ begin
     LabelText.FontColor := $FF71AAEB
   else
     LabelText.FontColor := $FFE1E3E6;
+end;
+
+procedure TFrameAttachmentPinnedMessage.SetMessageId(const Value: Int64);
+begin
+  FMessageId := Value;
 end;
 
 procedure TFrameAttachmentPinnedMessage.SetOnSelect(const Value: TNotifyEvent);
