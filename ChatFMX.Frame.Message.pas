@@ -279,6 +279,7 @@ begin
   LayoutSelectedIcon.Visible := False;
   LayoutLeft.Width := 51;
   LayoutRight.Visible := False;
+  RectangleUnread.Margins.Left := 54;
   RectangleUnread.Margins.Right := 0;
   CircleAvatar.Margins.Right := 7;
   MemoText.HitTest := False;
@@ -591,7 +592,7 @@ begin
   for var Control in FlowLayoutMedia.Controls do
     if Control is TFrameAttachmentPhoto then
     begin
-      var Id := (Control as TFrameAttachmentPhoto).Id;
+      var Id :=(Control as TFrameAttachmentPhoto).Id;
       Items[i] := Id;
       if Id = PhotoId then
         Index := i;
@@ -1204,9 +1205,16 @@ procedure TFrameMessage.SetVisibility(const Value: Boolean);
 begin
   inherited;
   if Visibility then
-    Opacity := 1
+  begin
+    LayoutContent.Visible := True;
+    //Opacity := 1
+    TAnimator.AnimateFloat(Self, 'Opacity', 1);
+  end
   else
+  begin
+    LayoutContent.Visible := False;
     Opacity := 0;
+  end;
   if Value then
   begin
     if (not FImageUrl.IsEmpty) and (CircleAvatar.Fill.Bitmap.Bitmap.IsEmpty) then

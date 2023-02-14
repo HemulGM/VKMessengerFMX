@@ -35,6 +35,7 @@ type
 
   TFrameMessagesHelper = record helper for TFrameMessages
     function ToIds: TArrayOfInteger;
+
   end;
 
   TMessageFrame = record
@@ -132,6 +133,8 @@ type
     LabelActualDate: TLabel;
     ShadowEffect1: TShadowEffect;
     TimerActivity: TTimer;
+    TimerVisibility: TTimer;
+    RectangleBG: TRectangle;
     procedure VertScrollBoxMessagesResize(Sender: TObject);
     procedure LayoutMessageListResize(Sender: TObject);
     procedure LayoutUnselClick(Sender: TObject);
@@ -152,6 +155,7 @@ type
     procedure LayoutCloseAddToFriendsClick(Sender: TObject);
     procedure ButtonAddToFriendsClick(Sender: TObject);
     procedure LayoutUnpinMessageClick(Sender: TObject);
+    procedure TimerVisibilityTimer(Sender: TObject);
   private
     FConversationId: TVkPeerId;
     FVK: TCustomVK;
@@ -225,7 +229,7 @@ type
     procedure SetIsCanWrtie(const Value: Boolean);
     procedure SetOnBack(const Value: TNotifyEvent);
     procedure AppendHistory(Items: TVkMessageHistory; const Data: IExtended);
-    procedure CalcDisappear;
+    procedure CalcDisappear(const All: Boolean);
     procedure ShowHints;
     procedure HideHints;
     procedure ErrorLoading;
@@ -498,13 +502,14 @@ begin
   FPinnedMessageId := -1;
   FChatScroll := TSmoothScroll.CreateFor(VertScrollBoxMessages);
   {$IFDEF ADAPTIVE}
-  VertScrollBoxMessages.ShowScrollBars := False;
-  RectangleChatBG.Margins.Right := 0;
-  RectangleHead.Sides := [];
+  //VertScrollBoxMessages.ShowScrollBars := False;
+  //RectangleChatBG.Margins.Right := 0;
+  RectangleBG.Sides := [];
+  RectangleHead.Sides := [TSide.Bottom];
   RectangleHead.Corners := [];
-  RectangleFooterBlock.Sides := [];
+  RectangleFooterBlock.Sides := [TSide.Top];
   RectangleFooterBlock.Corners := [];
-  RectangleFooter.Sides := [];
+  RectangleFooter.Sides := [TSide.Top];
   RectangleFooter.Corners := [];
   {$ELSE}
   FChatScroll.ScrollDelta := 2;
@@ -637,9 +642,15 @@ begin
       Break;
     end;
   if AllFavorite then
-    ButtonSelFavorite.ImageIndex := ImageIndexFavoriteOn
+  begin
+    ButtonSelFavorite.ImageIndex := ImageIndexFavoriteOn;
+    ButtonSelFavorite.Hint := 'Снять отметку';
+  end
   else
+  begin
     ButtonSelFavorite.ImageIndex := ImageIndexFavoriteOff;
+    ButtonSelFavorite.Hint := 'Отметить как важное';
+  end;
 end;
 
 procedure TFrameChat.UpdateReplyAnswerButton(const Count: Integer);
@@ -694,6 +705,7 @@ begin
         Break := True;
       end;
     end);
+  UpdateSelection(SelectedCount);
 end;
 
 procedure TFrameChat.FOnDeleteMessage(const Sender: TObject; const M: TMessage);
@@ -713,6 +725,7 @@ begin
         Break := True;
       end;
     end);
+  UpdateSelection(SelectedCount);
 end;
 
 procedure TFrameChat.FOnReadMessage(const Sender: TObject; const M: TMessage);
@@ -847,7 +860,7 @@ begin
   end;
   VertScrollBoxMessagesResize(nil);
   LayoutMessageList.RecalcSize;
-  CalcDisappear;
+  CalcDisappear(True);
   if LayoutMessageList.Opacity = 0 then
     Event.Queue(Self,
       procedure
@@ -869,7 +882,7 @@ begin
   end;
   VertScrollBoxMessagesResize(nil);
   LayoutMessageList.RecalcSize;
-  CalcDisappear;
+  CalcDisappear(True);
   if LayoutMessageList.Opacity = 0 then
     Event.Queue(Self,
       procedure
@@ -898,7 +911,7 @@ begin
   for var Control in LayoutMessageList.Controls do
     if (Control is TFrameMessage) or (Control is TFrameMessageAction) then
     begin
-      var Id := (Control as TFrameMessageBase).MessageId;
+      var Id :=(Control as TFrameMessageBase).MessageId;
       if (MsgId > Id) or (MsgId = -1) then
       begin
         MsgId := Id;
@@ -914,7 +927,7 @@ begin
   for var Control in LayoutMessageList.Controls do
     if (Control is TFrameMessage) or (Control is TFrameMessageAction) then
     begin
-      var Id := (Control as TFrameMessageBase).MessageId;
+      var Id :=(Control as TFrameMessageBase).MessageId;
       if (MsgId < Id) or (MsgId = -1) then
       begin
         MsgId := Id;
@@ -1345,8 +1358,13 @@ begin
     LayoutMessageList.Height;
 end;
 
-procedure TFrameChat.CalcDisappear;
+procedure TFrameChat.CalcDisappear(const All: Boolean);
 begin
+  if not All then
+  begin
+    TimerVisibility.Enabled := False;
+    TimerVisibility.Enabled := True;
+  end;
   if Visible then
   begin
     var Content := VertScrollBoxMessages.Content.ScrollBox.ContentBounds;
@@ -1358,9 +1376,9 @@ begin
     var ABottom := ATop + Min(ViewHeight, ContentHeight);
 
     for var Control in LayoutMessageList.Controls do
-      if Control is TFrameMessage then
+      if All and (Control is TFrameMessage) then
       begin
-        var Vis := ((Control.BoundsRect.Bottom > ATop) and
+        var Vis :=((Control.BoundsRect.Bottom > ATop) and
           (Control.BoundsRect.Top < ABottom)) or
           ((Control.BoundsRect.Top < ABottom) and
           (Control.BoundsRect.Bottom > ATop));
@@ -1368,7 +1386,7 @@ begin
       end
       else if Control is TFrameMessageDate then
       begin
-        var Vis := ((Control.BoundsRect.Top >= ATop) and
+        var Vis :=((Control.BoundsRect.Top >= ATop) and
           (Control.BoundsRect.Bottom <= ABottom));
         (Control as TFrameMessageDate).Visibility := Vis;
       end;
@@ -1429,13 +1447,13 @@ begin
   for var Item in FMessages do
     if (LDate = 0) and (Item.Frame is TFrameMessageDate) then
     begin
-      var Frame := (Item.Frame as TFrameMessageDate);
+      var Frame :=(Item.Frame as TFrameMessageDate);
       if Frame.Visibility then
         LDate := Frame.Date;
     end
     else if Item.Frame is TFrameMessage then
     begin
-      var Frame := (Item.Frame as TFrameMessage);
+      var Frame :=(Item.Frame as TFrameMessage);
       if Frame.Visibility then
       begin
         LabelActualDate.Text := HumanDateTime(Frame.Date);
@@ -1454,7 +1472,7 @@ end;
 
 procedure TFrameChat.VertScrollBoxMessagesViewportPositionChange(Sender: TObject; const OldViewportPosition, NewViewportPosition: TPointF; const ContentSizeChanged: Boolean);
 begin
-  CalcDisappear;
+  CalcDisappear(False);
   var Content := VertScrollBoxMessages.Content.ScrollBox.ContentBounds;
   if Abs(NewViewportPosition.Y - Content.Top) < 500 then
     EndOfChat;
@@ -1790,7 +1808,7 @@ begin
     UnselectAll;
     ShowSearch(False);
   end;
-  CalcDisappear;
+  CalcDisappear(True);
 end;
 
 procedure TFrameChat.ShowSearch(const Value: Boolean);
@@ -1802,6 +1820,12 @@ procedure TFrameChat.TimerActivityTimer(Sender: TObject);
 begin
   TimerActivity.Enabled := False;
   LayoutActivityContent.Visible := False;
+end;
+
+procedure TFrameChat.TimerVisibilityTimer(Sender: TObject);
+begin
+  TimerVisibility.Enabled := False;
+  CalcDisappear(True);
 end;
 
 procedure TFrameChat.SetVK(const Value: TCustomVK);

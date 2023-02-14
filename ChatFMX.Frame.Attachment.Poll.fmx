@@ -64,6 +64,7 @@ inherited FrameAttachmentPoll: TFrameAttachmentPoll
   end
   object LayoutClient: TLayout
     Align = Client
+    ClipChildren = True
     Size.Width = 421.000000000000000000
     Size.Height = 547.000000000000000000
     Size.PlatformDefault = False

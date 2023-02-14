@@ -28,7 +28,7 @@ type
     RectangleBG: TRectangle;
     VK: TVK;
     LayoutChat: TLayout;
-    Line1: TLine;
+    LineBevel: TLine;
     LayoutNoChat: TLayout;
     Layout2: TLayout;
     Path1: TPath;
@@ -241,6 +241,9 @@ begin
   {$IFDEF ADAPTIVE}
   ListBoxChats.ShowScrollBars := False;
   RectangleBG.Visible := False;
+  LineBevel.Visible := False;
+  LayoutChatFrames.Margins.Left := 0;
+  LayoutHeader.Visible := False;
   RectangleHead.Sides := [];
   RectangleHead.Corners := [];
   RectangleFooter.Sides := [];
