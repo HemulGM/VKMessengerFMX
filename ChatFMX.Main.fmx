@@ -2214,6 +2214,51 @@ object FormMain: TFormMain
     Visible = False
     TabOrder = 7
   end
+  object PopupHint: TPopup
+    Position.X = 663.000000000000000000
+    Position.Y = 128.000000000000000000
+    Size.Width = 143.000000000000000000
+    Size.Height = 24.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 11
+    object RectangleHint: TRectangle
+      Align = Client
+      Fill.Color = xFF131313
+      Padding.Left = 6.000000000000000000
+      Padding.Top = 6.000000000000000000
+      Padding.Right = 6.000000000000000000
+      Padding.Bottom = 6.000000000000000000
+      Size.Width = 143.000000000000000000
+      Size.Height = 24.000000000000000000
+      Size.PlatformDefault = False
+      Stroke.Kind = None
+      XRadius = 4.000000000000000000
+      YRadius = 4.000000000000000000
+      object LabelHint: TLabel
+        Align = Left
+        AutoSize = True
+        StyledSettings = [Style]
+        Position.X = 6.000000000000000000
+        Position.Y = 6.000000000000000000
+        Size.Width = 56.000000000000000000
+        Size.Height = 12.000000000000000000
+        Size.PlatformDefault = False
+        TextSettings.Font.Family = 'Roboto'
+        TextSettings.Font.Size = 13.000000000000000000
+        TextSettings.FontColor = xFFE5E5E5
+        TextSettings.WordWrap = False
+        Text = 'LabelHint'
+        TabOrder = 0
+      end
+    end
+  end
+  object TimerHintClose: TTimer
+    Enabled = False
+    Interval = 4000
+    OnTimer = TimerHintCloseTimer
+    Left = 840
+    Top = 312
+  end
   object VK: TVK
     BaseURL = 'https://api.vk.com/method'
     EndPoint = 'https://oauth.vk.com/authorize'
@@ -2250,5 +2295,12 @@ object FormMain: TFormMain
     VK = VK
     Left = 570
     Top = 99
+  end
+  object TimerHint: TTimer
+    Enabled = False
+    Interval = 600
+    OnTimer = TimerHintTimer
+    Left = 832
+    Top = 304
   end
 end

@@ -1,8 +1,8 @@
 inherited FrameAttachmentPinnedMessage: TFrameAttachmentPinnedMessage
+  Cursor = crHandPoint
   HitTest = True
   Size.Width = 438.000000000000000000
   Size.Height = 35.000000000000000000
-  OnClick = FrameClick
   object LayoutContent: TLayout
     Align = Client
     Size.Width = 438.000000000000000000
@@ -41,7 +41,6 @@ inherited FrameAttachmentPinnedMessage: TFrameAttachmentPinnedMessage
           AutoSize = True
           Cursor = crHandPoint
           StyledSettings = []
-          HitTest = True
           Margins.Right = 6.000000000000000000
           Size.Width = 68.000000000000000000
           Size.Height = 17.000000000000000000
@@ -59,7 +58,6 @@ inherited FrameAttachmentPinnedMessage: TFrameAttachmentPinnedMessage
           AutoSize = True
           Cursor = crHandPoint
           StyledSettings = []
-          HitTest = True
           Margins.Right = 6.000000000000000000
           Position.X = 74.000000000000000000
           Size.Width = 31.000000000000000000

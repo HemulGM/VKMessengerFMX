@@ -80,6 +80,11 @@ type
     Label1: TLabel;
     ButtonLogin: TButton;
     LayoutHeadContent: TLayout;
+    PopupHint: TPopup;
+    RectangleHint: TRectangle;
+    LabelHint: TLabel;
+    TimerHint: TTimer;
+    TimerHintClose: TTimer;
     procedure FormResize(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure VKAuth(Sender: TObject; Url: string; var Token: string; var TokenExpiry: Int64; var ChangePasswordHash: string);
@@ -108,6 +113,8 @@ type
     procedure UserEventsUsersTyping(Sender: TObject; Data: TChatTypingData);
     procedure UserEventsUserTyping(Sender: TObject; UserId: TVkPeerId; ChatId: Int64);
     procedure UserEventsUnhandledEvents(Sender: TObject; const JSON: TJSONValue);
+    procedure TimerHintTimer(Sender: TObject);
+    procedure TimerHintCloseTimer(Sender: TObject);
   private
     FToken: string;
     FChangePasswordHash: string;
@@ -145,6 +152,7 @@ type
     procedure FOnChangeMessage(const Sender: TObject; const M: TMessage);
     function FindChat(const PeerId: TVkPeerId; var ChatItem: TListBoxItemChat): Boolean;
     procedure LoadConversationAsync(WithMessageId: Int64);
+    procedure FOnAppHint(Sender: TObject);
   public
     property UnreadOnly: Boolean read FUnreadOnly write SetUnreadOnly;
     destructor Destroy; override;
@@ -161,7 +169,7 @@ implementation
 uses
   System.Math, System.Threading, VK.Errors, VK.FMX.OAuth2, VK.FMX.Captcha,
   System.IOUtils, VK.Clients, VK.Messages, ChatFMX.PreviewManager, FMX.Ani,
-  HGM.FMX.SmoothScroll, ChatFMX.Events;
+  HGM.FMX.SmoothScroll, ChatFMX.Events, FMX.Presentation.Win.Style;
 
 {$R *.fmx}
 
@@ -233,8 +241,23 @@ begin
   Memo1.Visible := not Memo1.Visible;
 end;
 
+procedure TFormMain.FOnAppHint(Sender: TObject);
+begin
+  TimerHint.Enabled := False;
+  if Application.Hint.IsEmpty then
+  begin
+    PopupHint.IsOpen := False;
+    Exit;
+  end;
+  if PopupHint.IsOpen then
+    TimerHintTimer(nil)
+  else
+    TimerHint.Enabled := True;
+end;
+
 procedure TFormMain.FormCreate(Sender: TObject);
 begin
+  //Application.OnHint := FOnAppHint;
   {$IFDEF ADAPTIVE AND MSWINDOWS}
   Width := 500;
   {$ENDIF}
@@ -441,6 +464,33 @@ begin
   LayoutChats.Visible := False;
   LayoutChat.Visible := True;
   {$ENDIF}
+end;
+
+procedure TFormMain.TimerHintCloseTimer(Sender: TObject);
+begin
+  TimerHintClose.Enabled := False;
+  if PopupHint.IsOpen then
+    PopupHint.IsOpen := False;
+end;
+
+procedure TFormMain.TimerHintTimer(Sender: TObject);
+begin
+  TimerHintClose.Enabled := False;
+  TimerHint.Enabled := False;
+  LabelHint.Text := Application.Hint;
+  LabelHint.RecalcSize;
+  PopupHint.Width := LabelHint.Width + RectangleHint.Padding.Left + RectangleHint.Padding.Right;
+  PopupHint.Placement := TPlacement.absolute;
+  var Pt := Screen.MousePos;
+  Pt.Offset(-5, 20);
+  PopupHint.PlacementRectangle.Rect := TRectF.Create(Pt, PopupHint.Width, PopupHint.Height);
+  if not PopupHint.IsOpen then
+  begin
+    PopupHint.Popup;
+    RectangleHint.Opacity := 0;
+    TAnimator.AnimateFloat(RectangleHint, 'Opacity', 1);
+  end;
+  TimerHintClose.Enabled := True;
 end;
 
 procedure TFormMain.UserEventsChangeConversationMajorId(Sender: TObject; PeerId: TVkPeerId; const NewId: Int64);

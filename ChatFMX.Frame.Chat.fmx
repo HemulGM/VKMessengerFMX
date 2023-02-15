@@ -25,7 +25,7 @@ object FrameChat: TFrameChat
       Align = Top
       Corners = [TopRight]
       Fill.Color = xFF222222
-      Sides = [Bottom]
+      Sides = [Top, Bottom, Right]
       Size.Width = 600.000000000000000000
       Size.Height = 50.000000000000000000
       Size.PlatformDefault = False
@@ -238,7 +238,7 @@ object FrameChat: TFrameChat
           Padding.Top = 10.000000000000000000
           Padding.Bottom = 10.000000000000000000
           Margins.Right = 12.000000000000000000
-          Size.Width = 532.000000000000000000
+          Size.Width = 572.000000000000000000
           Size.Height = 48.000000000000000000
           Size.PlatformDefault = False
           Visible = False
@@ -250,7 +250,7 @@ object FrameChat: TFrameChat
             ImageIndex = 11
             Margins.Top = 1.000000000000000000
             Margins.Bottom = 1.000000000000000000
-            Position.X = 320.000000000000000000
+            Position.X = 360.000000000000000000
             Position.Y = 11.000000000000000000
             Size.Width = 36.000000000000000000
             Size.Height = 26.000000000000000000
@@ -267,7 +267,7 @@ object FrameChat: TFrameChat
             ImageIndex = 9
             Margins.Top = 1.000000000000000000
             Margins.Bottom = 1.000000000000000000
-            Position.X = 248.000000000000000000
+            Position.X = 288.000000000000000000
             Position.Y = 11.000000000000000000
             Size.Width = 36.000000000000000000
             Size.Height = 26.000000000000000000
@@ -285,7 +285,7 @@ object FrameChat: TFrameChat
             ImageIndex = 10
             Margins.Top = 1.000000000000000000
             Margins.Bottom = 1.000000000000000000
-            Position.X = 284.000000000000000000
+            Position.X = 324.000000000000000000
             Position.Y = 11.000000000000000000
             Size.Width = 36.000000000000000000
             Size.Height = 26.000000000000000000
@@ -300,7 +300,8 @@ object FrameChat: TFrameChat
             Align = Client
             Cursor = crHandPoint
             HitTest = True
-            Size.Width = 212.000000000000000000
+            Margins.Left = 20.000000000000000000
+            Size.Width = 232.000000000000000000
             Size.Height = 28.000000000000000000
             Size.PlatformDefault = False
             TabOrder = 4
@@ -360,7 +361,7 @@ object FrameChat: TFrameChat
             Tag = 15
             Align = MostRight
             Margins.Left = 8.000000000000000000
-            Position.X = 364.000000000000000000
+            Position.X = 404.000000000000000000
             Position.Y = 10.000000000000000000
             Size.Width = 80.000000000000000000
             Size.Height = 28.000000000000000000
@@ -376,7 +377,7 @@ object FrameChat: TFrameChat
             Tag = 15
             Align = MostRight
             Margins.Left = 8.000000000000000000
-            Position.X = 452.000000000000000000
+            Position.X = 492.000000000000000000
             Position.Y = 10.000000000000000000
             Size.Width = 80.000000000000000000
             Size.Height = 28.000000000000000000
@@ -395,7 +396,7 @@ object FrameChat: TFrameChat
             ImageIndex = 20
             Margins.Top = 1.000000000000000000
             Margins.Bottom = 1.000000000000000000
-            Position.X = 212.000000000000000000
+            Position.X = 252.000000000000000000
             Position.Y = 11.000000000000000000
             Size.Width = 36.000000000000000000
             Size.Height = 26.000000000000000000
@@ -1152,6 +1153,7 @@ object FrameChat: TFrameChat
                 CECC3C419599894003000000CDCC3C419A998940}
               Fill.Color = xFF828282
               Locked = True
+              HitTest = False
               Size.Width = 12.000000000000000000
               Size.Height = 12.000000000000000000
               Size.PlatformDefault = False

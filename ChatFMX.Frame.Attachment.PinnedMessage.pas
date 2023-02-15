@@ -17,29 +17,23 @@ type
     LayoutFrom: TLayout;
     LabelFrom: TLabel;
     LabelTime: TLabel;
-    procedure FrameClick(Sender: TObject);
   private
     FText: string;
     FIsAttachmentText: Boolean;
-    FOnSelect: TNotifyEvent;
     FFrom: string;
     FDate: TDateTime;
     FMessageId: Int64;
     procedure SetText(const Value: string);
     procedure SetIsAttachmentText(const Value: Boolean);
-    procedure SetOnSelect(const Value: TNotifyEvent);
     procedure SetFrom(const Value: string);
     procedure SetDate(const Value: TDateTime);
     procedure SetMessageId(const Value: Int64);
   public
-    constructor Create(AOwner: TComponent; AVK: TCustomVK); override;
-    destructor Destroy; override;
     procedure Fill(Item: TVkMessage; Data: IExtended);
     property Text: string read FText write SetText;
     property From: string read FFrom write SetFrom;
     property Date: TDateTime read FDate write SetDate;
     property IsAttachmentText: Boolean read FIsAttachmentText write SetIsAttachmentText;
-    property OnSelect: TNotifyEvent read FOnSelect write SetOnSelect;
     property MessageId: Int64 read FMessageId write SetMessageId;
   end;
 
@@ -51,19 +45,10 @@ uses
 
 {$R *.fmx}
 
-constructor TFrameAttachmentPinnedMessage.Create(AOwner: TComponent; AVK: TCustomVK);
-begin
-  inherited;
-end;
-
-destructor TFrameAttachmentPinnedMessage.Destroy;
-begin
-  inherited;
-end;
-
 procedure TFrameAttachmentPinnedMessage.Fill(Item: TVkMessage; Data: IExtended);
 begin
   FMessageId := Item.Id;
+  Date := Item.Date;
   Text := ParseMention(PrepareForPreview(Item.Text));
   From := '';
   IsAttachmentText := False;
@@ -92,12 +77,6 @@ begin
   end;
 end;
 
-procedure TFrameAttachmentPinnedMessage.FrameClick(Sender: TObject);
-begin
-  if Assigned(OnSelect) then
-    OnSelect(Self);
-end;
-
 procedure TFrameAttachmentPinnedMessage.SetDate(const Value: TDateTime);
 begin
   FDate := Value;
@@ -122,11 +101,6 @@ end;
 procedure TFrameAttachmentPinnedMessage.SetMessageId(const Value: Int64);
 begin
   FMessageId := Value;
-end;
-
-procedure TFrameAttachmentPinnedMessage.SetOnSelect(const Value: TNotifyEvent);
-begin
-  FOnSelect := Value;
 end;
 
 procedure TFrameAttachmentPinnedMessage.SetText(const Value: string);
