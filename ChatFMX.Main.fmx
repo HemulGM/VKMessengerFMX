@@ -2259,6 +2259,13 @@ object FormMain: TFormMain
     Left = 840
     Top = 312
   end
+  object TimerHint: TTimer
+    Enabled = False
+    Interval = 600
+    OnTimer = TimerHintTimer
+    Left = 832
+    Top = 304
+  end
   object VK: TVK
     BaseURL = 'https://api.vk.com/method'
     EndPoint = 'https://oauth.vk.com/authorize'
@@ -2295,12 +2302,5 @@ object FormMain: TFormMain
     VK = VK
     Left = 570
     Top = 99
-  end
-  object TimerHint: TTimer
-    Enabled = False
-    Interval = 600
-    OnTimer = TimerHintTimer
-    Left = 832
-    Top = 304
   end
 end

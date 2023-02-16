@@ -21,6 +21,18 @@ type
   TListBoxLoading = class(TListBoxItem)
   end;
 
+  TMyHint = class(THint)
+  protected
+    procedure SetEnabled(const Value: Boolean); override;
+  public
+    procedure SetPosition(const X, Y: Single); override;
+    procedure SetHint(const AString: string); override;
+  end;
+
+  THintHelper = class helper for THint
+    class procedure Clear;
+  end;
+
   TFormMain = class(TForm)
     LayoutClient: TLayout;
     HorzScrollBoxContent: THorzScrollBox;
@@ -169,7 +181,7 @@ implementation
 uses
   System.Math, System.Threading, VK.Errors, VK.FMX.OAuth2, VK.FMX.Captcha,
   System.IOUtils, VK.Clients, VK.Messages, ChatFMX.PreviewManager, FMX.Ani,
-  HGM.FMX.SmoothScroll, ChatFMX.Events, FMX.Presentation.Win.Style;
+  HGM.FMX.SmoothScroll, ChatFMX.Events, FMX.Controls.Win;
 
 {$R *.fmx}
 
@@ -257,7 +269,7 @@ end;
 
 procedure TFormMain.FormCreate(Sender: TObject);
 begin
-  //Application.OnHint := FOnAppHint;
+  Application.OnHint := FOnAppHint;
   {$IFDEF ADAPTIVE AND MSWINDOWS}
   Width := 500;
   {$ENDIF}
@@ -882,8 +894,35 @@ begin
   Result := False;
 end;
 
+{ THintHelper }
+
+class procedure THintHelper.Clear;
+begin
+  with Self do
+    FClassRegistry := [];
+end;
+
+{ TMyHint }
+
+procedure TMyHint.SetEnabled(const Value: Boolean);
+begin
+  inherited;
+end;
+
+procedure TMyHint.SetHint(const AString: string);
+begin
+  inherited;
+end;
+
+procedure TMyHint.SetPosition(const X, Y: Single);
+begin
+  inherited;
+end;
+
 initialization
   ReportMemoryLeaksOnShutdown := True;
+  THint.Clear;
+  THint.RegisterClass(TMyHint);
 
 end.
 
