@@ -97,6 +97,7 @@ type
     LabelHint: TLabel;
     TimerHint: TTimer;
     TimerHintClose: TTimer;
+    ShadowEffect1: TShadowEffect;
     procedure FormResize(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure VKAuth(Sender: TObject; Url: string; var Token: string; var TokenExpiry: Int64; var ChangePasswordHash: string);
@@ -165,6 +166,7 @@ type
     function FindChat(const PeerId: TVkPeerId; var ChatItem: TListBoxItemChat): Boolean;
     procedure LoadConversationAsync(WithMessageId: Int64);
     procedure FOnAppHint(Sender: TObject);
+    procedure FOnHintOpacity(Sender: TObject);
   public
     property UnreadOnly: Boolean read FUnreadOnly write SetUnreadOnly;
     destructor Destroy; override;
@@ -181,7 +183,7 @@ implementation
 uses
   System.Math, System.Threading, VK.Errors, VK.FMX.OAuth2, VK.FMX.Captcha,
   System.IOUtils, VK.Clients, VK.Messages, ChatFMX.PreviewManager, FMX.Ani,
-  HGM.FMX.SmoothScroll, ChatFMX.Events, FMX.Controls.Win;
+  HGM.FMX.SmoothScroll, ChatFMX.Events, FMX.Controls.Win, ChatFMX.Utils;
 
 {$R *.fmx}
 
@@ -499,10 +501,16 @@ begin
   if not PopupHint.IsOpen then
   begin
     PopupHint.Popup;
-    RectangleHint.Opacity := 0;
-    TAnimator.AnimateFloat(RectangleHint, 'Opacity', 1);
+    RectangleHint.Opacity := 0.1;
+    TAnimator.AnimateFloat(RectangleHint, 'Opacity', 1, FOnHintOpacity);
+    ShadowEffect1.UpdateParentEffects;
   end;
   TimerHintClose.Enabled := True;
+end;
+
+procedure TFormMain.FOnHintOpacity(Sender: TObject);
+begin
+  ShadowEffect1.UpdateParentEffects;
 end;
 
 procedure TFormMain.UserEventsChangeConversationMajorId(Sender: TObject; PeerId: TVkPeerId; const NewId: Int64);

@@ -2250,6 +2250,13 @@ object FormMain: TFormMain
         Text = 'LabelHint'
         TabOrder = 0
       end
+      object ShadowEffect1: TShadowEffect
+        Distance = 0.001000000047497451
+        Direction = 45.000000000000000000
+        Softness = 0.300000011920929000
+        Opacity = 0.300000011920929000
+        ShadowColor = claBlack
+      end
     end
   end
   object TimerHintClose: TTimer

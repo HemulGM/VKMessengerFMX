@@ -4,11 +4,12 @@ interface
 
 uses
   VK.Types, System.SysUtils, VK.Entity.Message, FMX.Ani, FMX.Types, FMX.Controls,
-  System.Types;
+  System.Types, System.Classes;
 
 type
   TAnimatorHelper = class helper for TAnimator
     class procedure DetachPropertyAnimation(const Target: TFmxObject; const APropertyName: string);
+    class procedure AnimateFloat(const Target: TFmxObject; const APropertyName: string; const NewValue: Single; Update: TNotifyEvent; Duration: Single = 0.2; AType: TAnimationType = TAnimationType.in; AInterpolation: TInterpolationType = TInterpolationType.Linear); overload;
   end;
 
 function AttachmentToText(const Value: TVkAttachmentType): string;
@@ -252,6 +253,29 @@ begin
 end;
 
 { TAnimatorHelper }
+
+class procedure TAnimatorHelper.AnimateFloat(const Target: TFmxObject; const APropertyName: string; const NewValue: Single; Update: TNotifyEvent; Duration: Single = 0.2; AType: TAnimationType = TAnimationType.in; AInterpolation: TInterpolationType = TInterpolationType.Linear);
+var
+  Animation: TFloatAnimation;
+begin
+  StopPropertyAnimation(Target, APropertyName);
+
+  with Self do
+    CreateDestroyer;
+
+  Animation := TFloatAnimation.Create(nil);
+  Animation.Parent := Target;
+  Animation.AnimationType := AType;
+  Animation.Interpolation := AInterpolation;
+  Animation.Duration := Duration;
+  Animation.PropertyName := APropertyName;
+  Animation.StartFromCurrent := True;
+  Animation.StopValue := NewValue;
+  Animation.OnProcess := Update;
+  with Self do
+    FDestroyer.RegisterAnimation(Animation);
+  Animation.Start;
+end;
 
 class procedure TAnimatorHelper.DetachPropertyAnimation(const Target: TFmxObject; const APropertyName: string);
 var
