@@ -31,15 +31,6 @@ type
     LabelTime: TLabel;
     MemoText: TMemo;
     LayoutRightTop: TLayout;
-    PathAnswer: TPath;
-    LayoutAnswer: TLayout;
-    LayoutFavorite: TLayout;
-    PathStar: TPath;
-    ColorAnimationAnswer: TColorAnimation;
-    ColorAnimationStar: TColorAnimation;
-    LayoutEdit: TLayout;
-    PathEdit: TPath;
-    ColorAnimationEdit: TColorAnimation;
     RectangleUnread: TRectangle;
     LayoutContent: TLayout;
     FlowLayoutMedia: TFlowLayout;
@@ -53,6 +44,9 @@ type
     LabelMesDeleted: TLabel;
     LabelRestoreMessage: TLabel;
     RectangleFlash: TRectangle;
+    ButtonFavorite: TButton;
+    ButtonEdit: TButton;
+    ButtonReply: TButton;
     procedure MemoTextChange(Sender: TObject);
     procedure MemoTextResize(Sender: TObject);
     procedure FrameResize(Sender: TObject);
@@ -67,7 +61,7 @@ type
     procedure FlowLayoutMediaResize(Sender: TObject);
     procedure LayoutFwdMessagesResize(Sender: TObject);
     procedure LabelRestoreMessageClick(Sender: TObject);
-    procedure PathStarClick(Sender: TObject);
+    procedure ButtonFavoriteClick(Sender: TObject);
   private
     FText: string;
     FFromText: string;
@@ -145,6 +139,7 @@ type
     procedure FOnReplyMessageAttachClick(Sender: TObject);
     procedure SetOnReplyMessageClick(const Value: TNotifyEvent);
     procedure ClearAttachments;
+    procedure UpdateMessageActions;
   protected
     procedure SetVisibility(const Value: Boolean); override;
     procedure SetDate(const Value: TDateTime); override;
@@ -302,6 +297,17 @@ destructor TFrameMessage.Destroy;
 begin
   TPreview.Instance.Unsubscribe(FOnReadyImage);
   inherited;
+end;
+
+procedure TFrameMessage.ButtonFavoriteClick(Sender: TObject);
+begin
+  var MsgId: Int64;
+  var Mark: Boolean := not IsImportant;
+  TTask.Run(
+    procedure
+    begin
+      VK.Messages.MarkAsImportant(MsgId, MessageId, Mark);
+    end);
 end;
 
 procedure TFrameMessage.ClearAttachments;
@@ -592,7 +598,7 @@ begin
   for var Control in FlowLayoutMedia.Controls do
     if Control is TFrameAttachmentPhoto then
     begin
-      var Id :=(Control as TFrameAttachmentPhoto).Id;
+      var Id := (Control as TFrameAttachmentPhoto).Id;
       Items[i] := Id;
       if Id = PhotoId then
         Index := i;
@@ -857,17 +863,6 @@ begin
   MemoTextChange(Sender);
 end;
 
-procedure TFrameMessage.PathStarClick(Sender: TObject);
-begin
-  var MsgId: Int64;
-  var Mark: Boolean := not IsImportant;
-  TTask.Run(
-    procedure
-    begin
-      VK.Messages.MarkAsImportant(MsgId, MessageId, Mark);
-    end);
-end;
-
 procedure TFrameMessage.SetCanAnswer(const Value: Boolean);
 begin
   FCanAnswer := Value;
@@ -947,13 +942,9 @@ begin
     LabelFrom.FontColor := TAlphaColorRec.White;
     LabelTime.FontColor := $FFE3D3AC;
 
-    PathAnswer.Fill.Color := $99FFFFFF;
-    ColorAnimationAnswer.StartValue := $99FFFFFF;
-    ColorAnimationAnswer.StopValue := $EEFFFFFF;
-
-    PathEdit.Fill.Color := $99FFFFFF;
-    ColorAnimationEdit.StartValue := $99FFFFFF;
-    ColorAnimationEdit.StopValue := $EEFFFFFF;
+    ButtonFavorite.StyleLookup := 'buttonstyle_msg_star_gift';
+    ButtonEdit.StyleLookup := 'buttonstyle_msg_edit_gift';
+    ButtonReply.StyleLookup := 'buttonstyle_msg_reply_gift';
   end
   else
   begin
@@ -961,13 +952,9 @@ begin
     LabelFrom.FontColor := $FF71AAEB;
     LabelTime.FontColor := $FF828282;
 
-    PathAnswer.Fill.Color := $FF5B5B5B;
-    ColorAnimationAnswer.StartValue := $FF5B5B5B;
-    ColorAnimationAnswer.StopValue := $FF6A6A6A;
-
-    PathEdit.Fill.Color := $FF5B5B5B;
-    ColorAnimationEdit.StartValue := $FF5B5B5B;
-    ColorAnimationEdit.StopValue := $FF6A6A6A;
+    ButtonFavorite.StyleLookup := 'buttonstyle_msg_star';
+    ButtonEdit.StyleLookup := 'buttonstyle_msg_edit';
+    ButtonReply.StyleLookup := 'buttonstyle_msg_reply';
   end;
   RectangleGiftBG.Visible := FIsGift;
   UpdateImportant;
@@ -1022,35 +1009,21 @@ procedure TFrameMessage.UpdateImportant;
 begin
   if FIsImportant then
   begin
+    ButtonFavorite.Hint := 'Снять отметку';
     if FIsGift then
-    begin
-      PathStar.Fill.Color := $FF5B5B5B;
-      ColorAnimationStar.StartValue := $FF5B5B5B;
-      ColorAnimationStar.StopValue := $FF6A6A6A;
-    end
+      ButtonFavorite.StyleLookup := 'buttonstyle_msg_star_gift_active'
     else
-    begin
-      ColorAnimationStar.StartValue := $FF71AAEB;
-      ColorAnimationStar.StopValue := $FF71AAEB;
-      PathStar.Fill.Color := $FF71AAEB;
-    end;
+      ButtonFavorite.StyleLookup := 'buttonstyle_msg_star_active';
   end
   else
   begin
+    ButtonFavorite.Hint := 'Отметить как важное';
     if FIsGift then
-    begin
-      PathStar.Fill.Color := $99FFFFFF;
-      ColorAnimationStar.StartValue := $99FFFFFF;
-      ColorAnimationStar.StopValue := $EEFFFFFF;
-    end
+      ButtonFavorite.StyleLookup := 'buttonstyle_msg_star_gift'
     else
-    begin
-      ColorAnimationStar.StartValue := $FF5B5B5B;
-      ColorAnimationStar.StopValue := $FF6A6A6A;
-      PathStar.Fill.Color := $FF5B5B5B;
-    end;
+      ButtonFavorite.StyleLookup := 'buttonstyle_msg_star';
   end;
-  LayoutFavorite.Visible := FIsImportant;
+  UpdateMessageActions;
 end;
 
 procedure TFrameMessage.SetIsImportant(const Value: Boolean);
@@ -1130,16 +1103,20 @@ begin
   UpdateSubType;
 end;
 
+procedure TFrameMessage.UpdateMessageActions;
+begin
+  PathSelected.Visible := FMouseFrame or IsSelected;
+  ButtonReply.Visible := (not IsSelfMessage) and FMouseFrame and ChatCanAnswer;
+  ButtonEdit.Visible := (IsSelfMessage and IsCanEdit) and FMouseFrame;
+  ButtonFavorite.Visible := FMouseFrame or IsImportant;
+end;
+
 procedure TFrameMessage.SetMouseFrame(const Value: Boolean);
 begin
   if IsDeleted and Value then
     Exit;
   FMouseFrame := Value;
-  PathSelected.Visible := FMouseFrame or IsSelected;
-  LayoutAnswer.Visible := (not IsSelfMessage) and FMouseFrame and ChatCanAnswer;
-  LayoutEdit.Visible := (IsSelfMessage and IsCanEdit) and FMouseFrame;
-  if not IsImportant then
-    LayoutFavorite.Visible := FMouseFrame;
+  UpdateMessageActions;
 end;
 
 procedure TFrameMessage.SetOnReplyMessageClick(const Value: TNotifyEvent);

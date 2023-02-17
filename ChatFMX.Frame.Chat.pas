@@ -17,6 +17,13 @@ uses
 type
   TFrameChat = class;
 
+  TUser = record
+
+  end;
+
+  TUsers = class(TList<TUser>)
+  end;
+
   TLayout = class(FMX.Layouts.TLayout)
   end;
 
@@ -135,6 +142,12 @@ type
     TimerActivity: TTimer;
     TimerVisibility: TTimer;
     RectangleBG: TRectangle;
+    LayoutActions: TLayout;
+    LayoutSearch: TLayout;
+    EditSearch: TEdit;
+    ButtonSearchDate: TButton;
+    ButtonSearchRun: TButton;
+    ButtonSearchCancel: TButton;
     procedure VertScrollBoxMessagesResize(Sender: TObject);
     procedure LayoutMessageListResize(Sender: TObject);
     procedure LayoutUnselClick(Sender: TObject);
@@ -158,6 +171,8 @@ type
     procedure TimerVisibilityTimer(Sender: TObject);
     procedure LabelInfoMouseEnter(Sender: TObject);
     procedure LabelInfoMouseLeave(Sender: TObject);
+    procedure ButtonSearchClick(Sender: TObject);
+    procedure ButtonSearchCancelClick(Sender: TObject);
   private
     FConversationId: TVkPeerId;
     FVK: TCustomVK;
@@ -338,6 +353,11 @@ begin
   SetLength(Result, Cnt);
 end;
 
+procedure TFrameChat.ButtonSearchCancelClick(Sender: TObject);
+begin
+  ShowSearch(False);
+end;
+
 procedure TFrameChat.ButtonAddToFriendsClick(Sender: TObject);
 begin
   //
@@ -383,6 +403,11 @@ begin
             end);
       end;
     end);
+end;
+
+procedure TFrameChat.ButtonSearchClick(Sender: TObject);
+begin
+  ShowSearch(True);
 end;
 
 procedure TFrameChat.ButtonSelAsSPAMClick(Sender: TObject);
@@ -529,6 +554,7 @@ begin
   HavePinned := False;
   LayoutMessageList.Left := 0;
   LayoutMessageList.Opacity := 0;
+  ShowSearch(False);
   UpdateFooterSize;
   Event.QueueSubscribe(Self);
 end;
@@ -933,7 +959,7 @@ begin
   for var Control in LayoutMessageList.Controls do
     if (Control is TFrameMessage) or (Control is TFrameMessageAction) then
     begin
-      var Id :=(Control as TFrameMessageBase).MessageId;
+      var Id := (Control as TFrameMessageBase).MessageId;
       if (MsgId > Id) or (MsgId = -1) then
       begin
         MsgId := Id;
@@ -949,7 +975,7 @@ begin
   for var Control in LayoutMessageList.Controls do
     if (Control is TFrameMessage) or (Control is TFrameMessageAction) then
     begin
-      var Id :=(Control as TFrameMessageBase).MessageId;
+      var Id := (Control as TFrameMessageBase).MessageId;
       if (MsgId < Id) or (MsgId = -1) then
       begin
         MsgId := Id;
@@ -1400,7 +1426,7 @@ begin
     for var Control in LayoutMessageList.Controls do
       if All and (Control is TFrameMessage) then
       begin
-        var Vis :=((Control.BoundsRect.Bottom > ATop) and
+        var Vis := ((Control.BoundsRect.Bottom > ATop) and
           (Control.BoundsRect.Top < ABottom)) or
           ((Control.BoundsRect.Top < ABottom) and
           (Control.BoundsRect.Bottom > ATop));
@@ -1408,7 +1434,7 @@ begin
       end
       else if Control is TFrameMessageDate then
       begin
-        var Vis :=((Control.BoundsRect.Top >= ATop) and
+        var Vis := ((Control.BoundsRect.Top >= ATop) and
           (Control.BoundsRect.Bottom <= ABottom));
         (Control as TFrameMessageDate).Visibility := Vis;
       end;
@@ -1469,13 +1495,13 @@ begin
   for var Item in FMessages do
     if (LDate = 0) and (Item.Frame is TFrameMessageDate) then
     begin
-      var Frame :=(Item.Frame as TFrameMessageDate);
+      var Frame := (Item.Frame as TFrameMessageDate);
       if Frame.Visibility then
         LDate := Frame.Date;
     end
     else if Item.Frame is TFrameMessage then
     begin
-      var Frame :=(Item.Frame as TFrameMessage);
+      var Frame := (Item.Frame as TFrameMessage);
       if Frame.Visibility then
       begin
         LabelActualDate.Text := HumanDateTime(Frame.Date);
@@ -1835,7 +1861,8 @@ end;
 
 procedure TFrameChat.ShowSearch(const Value: Boolean);
 begin
-
+  LayoutSearch.Visible := Value;
+  LayoutActions.Visible := not Value;
 end;
 
 procedure TFrameChat.TimerActivityTimer(Sender: TObject);

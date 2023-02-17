@@ -98,7 +98,7 @@ type
     TimerHint: TTimer;
     TimerHintClose: TTimer;
     ShadowEffect1: TShadowEffect;
-    Rectangle3: TRectangle;
+    RectangleHintArrow: TRectangle;
     procedure FormResize(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure VKAuth(Sender: TObject; Url: string; var Token: string; var TokenExpiry: Int64; var ChangePasswordHash: string);
@@ -493,16 +493,33 @@ begin
   TimerHintClose.Enabled := False;
   TimerHint.Enabled := False;
   LabelHint.Text := Application.Hint;
+  LabelHint.RecalcSize;
   PopupHint.Width := LabelHint.Width + RectangleHint.Padding.Left + RectangleHint.Padding.Right;
   var Obj := ObjectAtPoint(Screen.MousePos);
   if (Obj <> nil) and (Obj is TControl) then
   begin
-    PopupHint.Placement := TPlacement.absolute;
-    var Pt := (Obj as TControl).AbsoluteRect.CenterPoint;
+    if (Obj as TControl).Tag = 0 then
+    begin
+      RectangleHintArrow.Position.Y := -4;
+      PopupHint.Placement := TPlacement.absolute;
+      var Pt := (Obj as TControl).AbsoluteRect.TopLeft;
 
-    Pt.Offset(-20, (Obj as TControl).Height / 2 + 10);
-    Pt := ClientToScreen(Pt);
-    PopupHint.PlacementRectangle.Rect := TRectF.Create(Pt, PopupHint.Width, PopupHint.Height);
+      Pt.Offset((Obj as TControl).Width / 2 - 20, (Obj as TControl).Height + 10);
+      Pt := ClientToScreen(Pt);
+      var PR := TRectF.Create(Pt, PopupHint.Width, PopupHint.Height);
+      PopupHint.PlacementRectangle.Rect := PR;
+    end
+    else
+    begin
+      PopupHint.Placement := TPlacement.absolute;
+      RectangleHintArrow.Position.Y := RectangleHint.Height - 10;
+      var Pt := (Obj as TControl).AbsoluteRect.TopLeft;
+
+      Pt.Offset((Obj as TControl).Width / 2 - 20, - PopupHint.Height);
+      Pt := ClientToScreen(Pt);
+      var PR := TRectF.Create(Pt, PopupHint.Width, PopupHint.Height);
+      PopupHint.PlacementRectangle.Rect := PR;
+    end;
   end
   else
   begin
