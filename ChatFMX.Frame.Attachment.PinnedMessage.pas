@@ -17,6 +17,8 @@ type
     LayoutFrom: TLayout;
     LabelFrom: TLabel;
     LabelTime: TLabel;
+    procedure LabelFromMouseEnter(Sender: TObject);
+    procedure LabelFromMouseLeave(Sender: TObject);
   private
     FText: string;
     FIsAttachmentText: Boolean;
@@ -75,6 +77,20 @@ begin
     Text := 'Карта';
     IsAttachmentText := True;
   end;
+end;
+
+procedure TFrameAttachmentPinnedMessage.LabelFromMouseEnter(Sender: TObject);
+var
+  Control: TLabel absolute Sender;
+begin
+  Control.TextSettings.Font.Style := Control.TextSettings.Font.Style + [TFontStyle.fsUnderline];
+end;
+
+procedure TFrameAttachmentPinnedMessage.LabelFromMouseLeave(Sender: TObject);
+var
+  Control: TLabel absolute Sender;
+begin
+  Control.TextSettings.Font.Style := Control.TextSettings.Font.Style - [TFontStyle.fsUnderline];
 end;
 
 procedure TFrameAttachmentPinnedMessage.SetDate(const Value: TDateTime);

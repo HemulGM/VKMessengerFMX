@@ -84,7 +84,7 @@ type
     LayoutSendControls: TLayout;
     Layout3: TLayout;
     RectangleMessage: TRectangle;
-    LayoutMessgeAcations: TLayout;
+    LayoutMessgeActions: TLayout;
     MemoText: TMemo;
     LayoutFooterBottom: TLayout;
     LayoutFooterMessage: TLayout;
@@ -124,9 +124,9 @@ type
     PathVer: TPath;
     RectangleDesign: TRectangle;
     LayoutFooterKeyboard: TLayout;
-    Layout1: TLayout;
-    Button3: TButton;
-    Button4: TButton;
+    LayoutMessageActionsAlign: TLayout;
+    ButtonAttachPhotoVideo: TButton;
+    ButtonAttachSmile: TButton;
     CheckBoxKeyboard: TCheckBox;
     LayoutActualDate: TLayout;
     RoundRectActualDate: TRoundRect;
@@ -156,6 +156,8 @@ type
     procedure ButtonAddToFriendsClick(Sender: TObject);
     procedure LayoutUnpinMessageClick(Sender: TObject);
     procedure TimerVisibilityTimer(Sender: TObject);
+    procedure LabelInfoMouseEnter(Sender: TObject);
+    procedure LabelInfoMouseLeave(Sender: TObject);
   private
     FConversationId: TVkPeerId;
     FVK: TCustomVK;
@@ -549,6 +551,20 @@ begin
   RoundRectActualDate.Width := LabelActualDate.Width + 30;
 end;
 
+procedure TFrameChat.LabelInfoMouseEnter(Sender: TObject);
+var
+  Control: TLabel absolute Sender;
+begin
+  Control.TextSettings.Font.Style := Control.TextSettings.Font.Style + [TFontStyle.fsUnderline];
+end;
+
+procedure TFrameChat.LabelInfoMouseLeave(Sender: TObject);
+var
+  Control: TLabel absolute Sender;
+begin
+  Control.TextSettings.Font.Style := Control.TextSettings.Font.Style - [TFontStyle.fsUnderline];
+end;
+
 procedure TFrameChat.LayoutCloseAddToFriendsClick(Sender: TObject);
 begin
   IsNeedAddToFriends := False;
@@ -624,9 +640,15 @@ begin
   if ButtonSelPin.Visible then
   begin
     if Selected[0].MessageId = PinnedMessageId then
-      ButtonSelPin.ImageIndex := ImageIndexPinOn
+    begin
+      ButtonSelPin.ImageIndex := ImageIndexPinOn;
+      ButtonSelPin.Hint := 'Открепить сообщение';
+    end
     else
+    begin
       ButtonSelPin.ImageIndex := ImageIndexPinOff;
+      ButtonSelPin.Hint := 'Закрепить сообщение';
+    end;
     ButtonSelPin.Align := TAlignLayout.Left;
     ButtonSelPin.Align := TAlignLayout.Right;
   end;

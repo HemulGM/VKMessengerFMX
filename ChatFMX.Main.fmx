@@ -2080,7 +2080,7 @@ object FormMain: TFormMain
               Size.Height = 10.000000000000000000
               Size.PlatformDefault = False
               StyleLookup = 'loadstyle'
-              TabOrder = 4
+              TabOrder = 3
             end
           end
         end
@@ -2215,15 +2215,17 @@ object FormMain: TFormMain
     TabOrder = 7
   end
   object PopupHint: TPopup
-    Position.X = 663.000000000000000000
-    Position.Y = 128.000000000000000000
+    HitTest = False
+    Position.X = 643.000000000000000000
+    Position.Y = 177.000000000000000000
     Size.Width = 143.000000000000000000
     Size.Height = 24.000000000000000000
     Size.PlatformDefault = False
     TabOrder = 11
     object RectangleHint: TRectangle
       Align = Client
-      Fill.Color = xFF131313
+      Fill.Color = xC8131313
+      HitTest = False
       Padding.Left = 6.000000000000000000
       Padding.Top = 6.000000000000000000
       Padding.Right = 6.000000000000000000
@@ -2234,6 +2236,26 @@ object FormMain: TFormMain
       Stroke.Kind = None
       XRadius = 4.000000000000000000
       YRadius = 4.000000000000000000
+      object Rectangle3: TRectangle
+        Fill.Color = xC8131313
+        HitTest = False
+        Position.X = 13.000000000000000000
+        Position.Y = -4.000000000000000000
+        RotationAngle = 45.000000000000000000
+        Size.Width = 14.000000000000000000
+        Size.Height = 14.000000000000000000
+        Size.PlatformDefault = False
+        Stroke.Kind = None
+        XRadius = 1.000000000000000000
+        YRadius = 1.000000000000000000
+      end
+      object ShadowEffect1: TShadowEffect
+        Distance = 0.001000000047497451
+        Direction = 45.000000000000000000
+        Softness = 0.300000011920929000
+        Opacity = 0.300000011920929000
+        ShadowColor = claBlack
+      end
       object LabelHint: TLabel
         Align = Left
         AutoSize = True
@@ -2249,13 +2271,6 @@ object FormMain: TFormMain
         TextSettings.WordWrap = False
         Text = 'LabelHint'
         TabOrder = 0
-      end
-      object ShadowEffect1: TShadowEffect
-        Distance = 0.001000000047497451
-        Direction = 45.000000000000000000
-        Softness = 0.300000011920929000
-        Opacity = 0.300000011920929000
-        ShadowColor = claBlack
       end
     end
   end

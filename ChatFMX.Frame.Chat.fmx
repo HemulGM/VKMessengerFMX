@@ -77,6 +77,7 @@ object FrameChat: TFrameChat
           object ButtonSearch: TButton
             Align = Right
             Cursor = crHandPoint
+            Hint = #1055#1086#1080#1089#1082' '#1087#1086' '#1095#1072#1090#1091
             Images = DataModuleRes.ImageListSVG
             ImageIndex = 3
             Position.X = 452.000000000000000000
@@ -103,7 +104,9 @@ object FrameChat: TFrameChat
           object LabelInfo: TLabel
             Align = MostLeft
             AutoSize = True
-            StyledSettings = [Style]
+            Cursor = crHandPoint
+            StyledSettings = []
+            HitTest = True
             Margins.Left = 4.000000000000000000
             Margins.Right = 5.000000000000000000
             Position.X = 104.000000000000000000
@@ -116,6 +119,8 @@ object FrameChat: TFrameChat
             TextSettings.WordWrap = False
             Text = '30 '#1091#1095#1072#1089#1090#1085#1080#1082#1086#1074
             TabOrder = 1
+            OnMouseEnter = LabelInfoMouseEnter
+            OnMouseLeave = LabelInfoMouseLeave
           end
           object LabelTitle: TLabel
             Align = MostLeft
@@ -246,6 +251,7 @@ object FrameChat: TFrameChat
           object ButtonSelAsSPAM: TButton
             Align = Right
             Cursor = crHandPoint
+            Hint = #1069#1090#1086' '#1089#1087#1072#1084
             Images = DataModuleRes.ImageListSVG
             ImageIndex = 11
             Margins.Top = 1.000000000000000000
@@ -257,7 +263,6 @@ object FrameChat: TFrameChat
             Size.PlatformDefault = False
             StyleLookup = 'button_small_20'
             TabOrder = 0
-            Text = 'Button1'
             OnClick = ButtonSelAsSPAMClick
           end
           object ButtonSelFavorite: TButton
@@ -488,6 +493,7 @@ object FrameChat: TFrameChat
               object ButtonAudio: TButton
                 Align = Client
                 Cursor = crHandPoint
+                Hint = #1043#1086#1083#1086#1089#1086#1074#1086#1077' '#1089#1086#1086#1073#1097#1077#1085#1080#1077
                 Images = DataModuleRes.ImageListSVG
                 ImageIndex = 12
                 Locked = True
@@ -532,23 +538,24 @@ object FrameChat: TFrameChat
           Stroke.Color = xFF555555
           XRadius = 6.000000000000000000
           YRadius = 6.000000000000000000
-          object LayoutMessgeAcations: TLayout
+          object LayoutMessgeActions: TLayout
             Align = Right
             Position.X = 372.000000000000000000
             Size.Width = 110.000000000000000000
             Size.Height = 39.000000000000000000
             Size.PlatformDefault = False
             TabOrder = 2
-            object Layout1: TLayout
+            object LayoutMessageActionsAlign: TLayout
               Align = Bottom
               Position.Y = 2.000000000000000000
               Size.Width = 110.000000000000000000
               Size.Height = 37.000000000000000000
               Size.PlatformDefault = False
               TabOrder = 3
-              object Button3: TButton
+              object ButtonAttachPhotoVideo: TButton
                 Align = MostRight
                 Cursor = crHandPoint
+                Hint = #1055#1088#1080#1082#1088#1077#1087#1080#1090#1100' '#1092#1086#1090#1086' '#1080#1083#1080' '#1074#1080#1076#1077#1086
                 Images = DataModuleRes.ImageListSVG
                 ImageIndex = 25
                 Position.X = 38.000000000000000000
@@ -559,7 +566,7 @@ object FrameChat: TFrameChat
                 TabOrder = 4
                 Text = 'Button1'
               end
-              object Button4: TButton
+              object ButtonAttachSmile: TButton
                 Align = MostRight
                 Cursor = crHandPoint
                 Images = DataModuleRes.ImageListSVG
@@ -574,6 +581,7 @@ object FrameChat: TFrameChat
               end
               object CheckBoxKeyboard: TCheckBox
                 Align = Right
+                Hint = #1055#1086#1082#1072#1079#1072#1090#1100'/'#1089#1082#1088#1099#1090#1100' '#1082#1083#1072#1074#1080#1072#1090#1091#1088#1091
                 Position.X = 2.000000000000000000
                 Size.Width = 36.000000000000000000
                 Size.Height = 37.000000000000000000
@@ -760,6 +768,7 @@ object FrameChat: TFrameChat
           object LayoutCloseAddToFriends: TLayout
             Align = MostRight
             Cursor = crHandPoint
+            Hint = #1057#1082#1088#1099#1090#1100
             HitTest = True
             Margins.Left = 8.000000000000000000
             Margins.Top = 12.000000000000000000
@@ -1079,6 +1088,7 @@ object FrameChat: TFrameChat
           object LayoutUnpinMessage: TLayout
             Align = MostRight
             Cursor = crHandPoint
+            Hint = #1057#1082#1088#1099#1090#1100
             HitTest = True
             Margins.Left = 6.000000000000000000
             Margins.Top = 6.000000000000000000
