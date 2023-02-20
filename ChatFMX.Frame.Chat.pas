@@ -12,16 +12,29 @@ uses
   VK.Entity.Common.ExtendedList, ChatFMX.Frame.Message, ChatFMX.Classes,
   ChatFMX.Frame.Attachment.PinnedMessage, System.Generics.Collections,
   VK.Entity.Keyboard, ChatFMX.Frame.Keyboard, FMX.Effects, VK.UserEvents,
-  ChatFMX.Frame.Message.Base;
+  ChatFMX.Frame.Message.Base, VK.Entity.Profile;
 
 type
   TFrameChat = class;
 
-  TUser = record
-
+  TUser = class
+    Id: Int64;
+    FirstName: string;
+    LastName: string;
+    FirstNameAcc: string;
+    LastNameAcc: string;
+    FirstNameGen: string;
+    LastNameGen: string;
+    Photo50: string;
+    Verified: Boolean;
+    Sex: TVkSex;
   end;
 
-  TUsers = class(TList<TUser>)
+  TUsers = class(TObjectList<TUser>)
+    function Update(const Id: Int64): TUser; overload;
+    function Update(const Data: TVkProfile): TUser; overload;
+    function Contains(const Id: Int64): Boolean;
+    function Get(const Id: Int64): TUser;
   end;
 
   TLayout = class(FMX.Layouts.TLayout)
@@ -209,6 +222,8 @@ type
     FCurrentKeyboard: TFrameKeyboard;
     FIsSending: Boolean;
     FWasHiddenKeyboard: Boolean;
+    FMembers: TUsers;
+    FLastChangeText: TDateTime;
     procedure SetConversationId(const Value: TVkPeerId);
     procedure ReloadAsync;
     procedure SetVK(const Value: TCustomVK);
@@ -282,6 +297,8 @@ type
     procedure UpdateMessage(const MessageId: Int64);
     procedure UpdateMessageData(const MessageId: Int64; ItemData: TVkMessage; ExtData: TVkEntityExtendedList<TVkMessage>);
     procedure FOnPinnedMessageClick(Sender: TObject);
+    procedure UpdateUsers(Data: IExtended);
+    procedure SendTyping;
     property HeadMode: THeadMode read FHeadMode write SetHeadMode;
   protected
     function GetMessageId(Frame: TFrameMessageBase): Int64;
@@ -330,11 +347,10 @@ const
 implementation
 
 uses
-  System.Threading, System.DateUtils, VK.Messages, VK.Entity.Profile,
-  System.Generics.Defaults, VK.Entity.Group, ChatFMX.PreviewManager, System.Math,
-  ChatFMX.Utils, HGM.FMX.Image, ChatFMX.Frame.MessageAction,
-  ChatFMX.Frame.MessageDate, ChatFMX.Events,
-  ChatFMX.Frame.Attachment.ReplyMessage;
+  System.Threading, System.DateUtils, VK.Messages, System.Generics.Defaults,
+  VK.Entity.Group, ChatFMX.PreviewManager, System.Math, ChatFMX.Utils,
+  HGM.FMX.Image, ChatFMX.Frame.MessageAction, ChatFMX.Frame.MessageDate,
+  ChatFMX.Events, ChatFMX.Frame.Attachment.ReplyMessage;
 
 {$R *.fmx}
 
@@ -520,6 +536,8 @@ constructor TFrameChat.Create(AOwner: TComponent; AVK: TCustomVK);
 begin
   FMessages := TMessages.Create;
   inherited Create(AOwner);
+  FLastChangeText := 0;
+  FMembers := TUsers.Create;
   FWasHiddenKeyboard := False;
   FCurrentKeyboard := nil;
   LayoutActualDate.Visible := False;
@@ -846,7 +864,15 @@ begin
   TimerActivity.Enabled := False;
   TimerActivity.Enabled := True;
   LayoutActivityContent.Visible := True;
-  LabelActivity.Text := Length(Data.UserIds).ToString + ' печатает';
+  if Length(Data.UserIds) > 1 then
+    LabelActivity.Text := Length(Data.UserIds).ToString + ' печатают'
+  else if FMembers.Contains(Data.UserIds[0]) then
+  begin
+    var FName := FMembers.Get(Data.UserIds[0]).FirstName;
+    LabelActivity.Text := FName + ' печатает';
+  end
+  else
+    LabelActivity.Text := 'Кто-то печатает';
 end;
 
 procedure TFrameChat.FOnUsersTyping(const Sender: TObject; const M: TMessage);
@@ -891,8 +917,15 @@ begin
     end);
 end;
 
+procedure TFrameChat.UpdateUsers(Data: IExtended);
+begin
+  for var i := 0 to Pred(Data.ProfileCount) do
+    FMembers.Update(Data.Profile(i));
+end;
+
 procedure TFrameChat.AppendHistory(Items: TVkMessageHistory; const Data: IExtended);
 begin
+  UpdateUsers(Data);
   var LastId: Int64 := -1;
   LayoutMessageList.BeginUpdate;
   try
@@ -919,6 +952,8 @@ end;
 
 procedure TFrameChat.AppendMessage(Items: TVkMessageHistory; Data: IExtended);
 begin
+  TimerActivityTimer(nil);
+  UpdateUsers(Data);
   LayoutMessageList.BeginUpdate;
   try
     for var Item in Items.Items do
@@ -959,7 +994,7 @@ begin
   for var Control in LayoutMessageList.Controls do
     if (Control is TFrameMessage) or (Control is TFrameMessageAction) then
     begin
-      var Id := (Control as TFrameMessageBase).MessageId;
+      var Id :=(Control as TFrameMessageBase).MessageId;
       if (MsgId > Id) or (MsgId = -1) then
       begin
         MsgId := Id;
@@ -975,7 +1010,7 @@ begin
   for var Control in LayoutMessageList.Controls do
     if (Control is TFrameMessage) or (Control is TFrameMessageAction) then
     begin
-      var Id := (Control as TFrameMessageBase).MessageId;
+      var Id :=(Control as TFrameMessageBase).MessageId;
       if (MsgId < Id) or (MsgId = -1) then
       begin
         MsgId := Id;
@@ -1184,6 +1219,7 @@ begin
   Event.Unsubscribe(TEventUsersTyping, FOnUsersTyping);
   Event.QueueUnsubscribe(Self);
   FMessages.Free;
+  FMembers.Free;
   inherited;
 end;
 
@@ -1246,6 +1282,7 @@ end;
 
 procedure TFrameChat.UpdateInfo(Info: TVkConversation; Data: IExtended);
 begin
+  UpdateUsers(Data);
   ImageUrl := '';
   Title := '';
   IsOnline := False;
@@ -1426,7 +1463,7 @@ begin
     for var Control in LayoutMessageList.Controls do
       if All and (Control is TFrameMessage) then
       begin
-        var Vis := ((Control.BoundsRect.Bottom > ATop) and
+        var Vis :=((Control.BoundsRect.Bottom > ATop) and
           (Control.BoundsRect.Top < ABottom)) or
           ((Control.BoundsRect.Top < ABottom) and
           (Control.BoundsRect.Bottom > ATop));
@@ -1434,7 +1471,7 @@ begin
       end
       else if Control is TFrameMessageDate then
       begin
-        var Vis := ((Control.BoundsRect.Top >= ATop) and
+        var Vis :=((Control.BoundsRect.Top >= ATop) and
           (Control.BoundsRect.Bottom <= ABottom));
         (Control as TFrameMessageDate).Visibility := Vis;
       end;
@@ -1495,13 +1532,13 @@ begin
   for var Item in FMessages do
     if (LDate = 0) and (Item.Frame is TFrameMessageDate) then
     begin
-      var Frame := (Item.Frame as TFrameMessageDate);
+      var Frame :=(Item.Frame as TFrameMessageDate);
       if Frame.Visibility then
         LDate := Frame.Date;
     end
     else if Item.Frame is TFrameMessage then
     begin
-      var Frame := (Item.Frame as TFrameMessage);
+      var Frame :=(Item.Frame as TFrameMessage);
       if Frame.Visibility then
       begin
         LabelActualDate.Text := HumanDateTime(Frame.Date);
@@ -1575,8 +1612,20 @@ begin
   end;
 end;
 
+procedure TFrameChat.SendTyping;
+begin
+  FLastChangeText := Now;
+  TTask.Run(
+    procedure
+    begin
+      VK.Messages.SetActivity(TVkMessageActivity.Typing, FConversationId);
+    end);
+end;
+
 procedure TFrameChat.MemoTextChangeTracking(Sender: TObject);
 begin
+  if SecondsBetween(FLastChangeText, Now) > 3 then
+    SendTyping;
   UpdateFooterSize;
   LabelTextHint.Visible := MemoText.Text.IsEmpty;
   ButtonAudio.Visible := MemoText.Text.IsEmpty;
@@ -1923,6 +1972,49 @@ begin
     else
       Result := 0;
   end));
+end;
+
+{ TUsers }
+
+function TUsers.Contains(const Id: Int64): Boolean;
+begin
+  for var Item in Self do
+    if Item.Id = Id then
+      Exit(True);
+  Result := False;
+end;
+
+function TUsers.Get(const Id: Int64): TUser;
+begin
+  for var Item in Self do
+    if Item.Id = Id then
+      Exit(Item);
+  Result := nil;
+end;
+
+function TUsers.Update(const Data: TVkProfile): TUser;
+begin
+  Result := Update(Data.Id);
+  Result.FirstName := Data.FirstName;
+  Result.FirstNameAcc := Data.FirstNameAcc;
+  Result.FirstNameGen := Data.FirstNameGen;
+  Result.LastName := Data.LastName;
+  Result.LastNameAcc := Data.LastNameAcc;
+  Result.LastNameGen := Data.LastNameGen;
+  Result.Sex := Data.Sex;
+  Result.Verified := Data.Verified;
+  Result.Photo50 := Data.Photo50;
+end;
+
+function TUsers.Update(const Id: Int64): TUser;
+begin
+  Result := Get(Id);
+  if not Assigned(Result) then
+  begin
+    Result := TUser.Create;
+    Result.Id := Id;
+    Add(Result);
+  end;
 end;
 
 end.
